@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: event-inventory-service
+
+api:
+  urls:
+    event:
+      v1: "/api/v1/events"
