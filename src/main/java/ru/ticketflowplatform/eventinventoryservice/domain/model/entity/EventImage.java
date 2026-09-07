@@ -4,6 +4,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapsId;
@@ -14,25 +15,27 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.ImageType;
 
+import static jakarta.persistence.EnumType.STRING;
 import static jakarta.persistence.FetchType.LAZY;
 
 @Entity
-@Table(schema = "events", name = "events_categories")
+@Table(schema = "events", name = "events_images")
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter
 @Setter
-public class EventCategory {
+public class EventImage {
 
     @EmbeddedId
-    private EventCategoryId eventCategoryId;
+    private EventImageId eventImageId;
 
-    @Column(name = "created_at", nullable = false)
+    @Enumerated(STRING)
+    private ImageType type;
+
+    @Column(name = "created_at")
     private Instant createdAt;
-
-    @Column(name = "updated_at")
-    private Instant updatedAt;
 
     @ManyToOne(fetch = LAZY)
     @MapsId("eventId")
@@ -40,19 +43,17 @@ public class EventCategory {
     private Event event;
 
     @ManyToOne(fetch = LAZY)
-    @MapsId("categoryId")
-    @JoinColumn(name = "category_id", nullable = false)
-    private Category category;
+    @MapsId("imageId")
+    @JoinColumn(name = "image_id", nullable = false)
+    private Image image;
 
     @NoArgsConstructor
     @AllArgsConstructor
     @Getter
     @Setter
     @Embeddable
-    public static class EventCategoryId {
+    public static class EventImageId {
         private UUID eventId;
-        private UUID categoryId;
+        private UUID imageId;
     }
 }
-
-

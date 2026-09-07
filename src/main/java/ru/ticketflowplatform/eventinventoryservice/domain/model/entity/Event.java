@@ -8,7 +8,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -16,7 +16,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.Status;
+import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.EventStatus;
 
 import static jakarta.persistence.EnumType.STRING;
 import static jakarta.persistence.FetchType.LAZY;
@@ -44,6 +44,9 @@ public class Event {
     @OneToMany(mappedBy = "event", fetch = LAZY)
     private List<EventCategory> eventCategories = new ArrayList<>();
 
+    @OneToMany(mappedBy = "event", fetch = LAZY)
+    private List<EventImage> eventImages = new ArrayList<>();
+
     @Column(name = "age_restriction")
     private Integer ageRestriction;
 
@@ -51,20 +54,20 @@ public class Event {
     private UUID imageId;
 
     @Enumerated(STRING)
-    private Status status;
+    private EventStatus status;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
     @Column(name = "published_at")
-    private LocalDateTime publishedAt;
+    private Instant publishedAt;
 
     @Column(name = "cancelled_at")
-    private LocalDateTime cancelledAt;
+    private Instant cancelledAt;
 
     @Column(name = "completed_at")
-    private LocalDateTime completedAt;
+    private Instant completedAt;
 }

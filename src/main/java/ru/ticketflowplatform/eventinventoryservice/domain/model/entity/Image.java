@@ -5,13 +5,18 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import static jakarta.persistence.FetchType.LAZY;
 
 @Entity
 @Table(schema = "events", name = "images")
@@ -29,5 +34,8 @@ public class Image {
     private String storageKey;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
+
+    @OneToMany(mappedBy = "image", fetch = LAZY)
+    private List<EventImage> eventImages = new ArrayList<>();
 }

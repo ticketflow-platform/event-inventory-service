@@ -1,6 +1,6 @@
 package ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums;
 
-public enum Status {
+public enum EventStatus {
     DRAFT,
     PUBLISHED,
     SALES_STOPPED,

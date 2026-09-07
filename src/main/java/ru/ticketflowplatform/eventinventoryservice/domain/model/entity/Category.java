@@ -7,7 +7,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -33,13 +33,14 @@ public class Category {
     @Column(name = "name")
     private String name;
 
-    private LocalDateTime cancelledAt;
+    @Column(name = "cancelled_at")
+    private Instant cancelledAt;
 
     @Column(name = "created_at", nullable = false)
-    private LocalDateTime createdAt;
+    private Instant createdAt;
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
     @OneToMany(mappedBy = "category", fetch = LAZY)
     private List<EventCategory> eventCategories = new ArrayList<>();
