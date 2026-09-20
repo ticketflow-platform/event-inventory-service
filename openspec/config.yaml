@@ -1,0 +1,108 @@
+schema: spec-driven
+
+context: |
+  Project engineering principles:
+
+  - Write production-quality Java code at a senior engineer level.
+  - Prefer the simplest solution that fully satisfies the requirement.
+  - Do not introduce new classes, interfaces, abstractions, layers, patterns, or dependencies unless they solve a concrete problem.
+  - Do not create an interface when there is only one implementation and no realistic substitution boundary is required.
+  - Do not create wrapper, manager, helper, factory, provider, strategy, or utility classes without a clear responsibility and demonstrated need.
+  - Avoid speculative abstractions intended only for hypothetical future requirements.
+  - Prefer modifying an existing appropriate class over creating a new class when responsibilities remain cohesive.
+  - Keep classes focused, but do not split cohesive logic into multiple tiny classes merely to satisfy abstract design principles.
+  - Prefer composition when it simplifies the design, but do not introduce composition layers unnecessarily.
+  - Apply SOLID principles pragmatically, not mechanically.
+  - Follow YAGNI, KISS, DRY, and separation of concerns, while avoiding premature abstraction.
+  - Duplication is acceptable when removing it would introduce a worse abstraction.
+  - Optimize for readability, maintainability, correctness, and explicit behavior.
+  - Prefer explicit and boring code over clever code.
+  - Use existing project conventions before introducing new patterns.
+  - Preserve the existing architecture unless the task explicitly requires changing it.
+  - Before adding a dependency, verify that the standard library or existing project dependencies cannot solve the problem adequately.
+  - Avoid unnecessary public APIs. Use the narrowest reasonable visibility.
+  - Prefer immutable data where practical.
+  - Use Java records for simple immutable data carriers when compatible with the project's Java version and conventions.
+  - Avoid setters and mutable state unless mutation is required by the domain or framework.
+  - Avoid boolean parameters when they obscure intent; prefer meaningful methods or types when this genuinely improves readability.
+  - Do not use Optional for fields, parameters, or collections unless the existing project explicitly follows that convention.
+  - Never return null collections; return empty collections when appropriate.
+  - Do not catch exceptions merely to log and rethrow them.
+  - Do not swallow exceptions.
+  - Preserve the original exception cause when translating exceptions.
+  - Use domain-specific exceptions only when they add meaningful semantic value.
+  - Avoid excessive comments. Comments should explain why, constraints, or non-obvious decisions, not restate the code.
+  - Prefer descriptive names over explanatory comments.
+  - Do not add Javadoc to obvious private methods or trivial getters/setters.
+  - Public API documentation should explain contracts and non-obvious constraints rather than implementation details.
+  - Tests should verify externally observable behavior rather than implementation details.
+  - Do not mock value objects, DTOs, simple domain objects, or code that can be instantiated directly.
+  - Prefer focused tests with minimal setup.
+  - Do not change unrelated code while implementing a task.
+  - Keep diffs small and intentional.
+  - Remove dead code introduced or made obsolete by the change.
+  - Do not perform broad refactoring unless it is necessary for the requested change.
+  - Reuse existing project utilities and patterns where appropriate.
+  - Before implementing, inspect adjacent code and tests to understand existing conventions.
+  - When multiple solutions are possible, choose the one with fewer moving parts unless another option has a concrete measurable advantage.
+
+  Spring-specific principles:
+
+  - Prefer constructor injection.
+  - Avoid field injection.
+  - Do not create interfaces for Spring services solely because they are services.
+  - Do not introduce service/repository/controller layers when the domain does not require them.
+  - Keep controllers thin: HTTP mapping, validation, authorization boundaries, and delegation.
+  - Business rules belong outside controllers.
+  - Transactions should have clear and deliberate boundaries.
+  - Avoid transactional annotations without understanding the required consistency boundary.
+  - Be explicit about lazy loading and query behavior.
+  - Avoid N+1 queries.
+  - Do not expose JPA entities directly through public API contracts unless this is an intentional existing project convention.
+  - Prefer DTOs at external boundaries when persistence models and API contracts can evolve independently.
+  - Do not add Lombok unless the project already uses it.
+  - If Lombok is already used, follow the existing project conventions rather than introducing additional Lombok patterns.
+  - Use framework features only when they reduce code or complexity, not simply because they exist.
+
+  Decision rule:
+  Before creating any new class, interface, abstraction, pattern, or dependency, ask:
+  "What concrete problem does this solve right now?"
+  If there is no clear answer, do not introduce it.
+
+rules:
+  proposal:
+    - Prefer the smallest change that satisfies the requested behavior.
+    - Explicitly mention when the proposal introduces a new abstraction, dependency, database migration, public API, or architectural boundary.
+    - Do not propose speculative extensibility without a concrete requirement.
+
+  specs:
+    - Describe externally observable behavior and business rules rather than internal implementation details.
+    - Include edge cases and failure behavior where relevant.
+    - Do not encode unnecessary implementation choices as product requirements.
+
+  design:
+    - Reuse the existing architecture and project patterns unless there is a concrete reason not to.
+    - Justify every new class, interface, abstraction, dependency, or architectural layer that is not obviously required.
+    - Prefer fewer moving parts and lower conceptual complexity.
+    - Explicitly identify transaction boundaries, persistence implications, and compatibility concerns when relevant.
+    - Reject speculative abstractions and premature generalization.
+
+  tasks:
+    - Break implementation into small independently verifiable steps.
+    - Include tests for changed behavior.
+    - Do not add refactoring tasks unrelated to the requested change.
+    - Include removal of dead or obsolete code when the change makes it unnecessary.
+
+operations:
+  apply:
+    guidance:
+      - Inspect nearby production code and tests before implementing.
+      - Keep the implementation diff minimal and focused.
+      - Run the relevant tests after implementation.
+      - Do not mark a task complete until the implementation compiles and relevant tests pass.
+      - If implementation requires significantly more abstractions than the design anticipated, reconsider the design before continuing.
+
+  archive:
+    guidance:
+      - Summarize the behavior that actually shipped.
+      - Mention important deviations from the original design.

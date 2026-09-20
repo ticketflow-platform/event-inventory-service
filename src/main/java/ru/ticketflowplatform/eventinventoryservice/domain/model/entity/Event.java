@@ -50,9 +50,6 @@ public class Event {
     @Column(name = "age_restriction")
     private Integer ageRestriction;
 
-    @Column(name = "image_id")
-    private UUID imageId;
-
     @Enumerated(STRING)
     private EventStatus status;
 
