@@ -3,7 +3,7 @@ package ru.ticketflowplatform.eventinventoryservice.domain.model.dto.in;
 import java.util.List;
 import java.util.UUID;
 
-public record EventRequestDto(
+public record CreateEventRequestDto(
         String title,
         String description,
         List<EventCategoryRequestDto> categories,
