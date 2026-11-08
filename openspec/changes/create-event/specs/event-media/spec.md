@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Event supports reusable images
-An event SHALL be associated with zero or more reusable image records through event-image links. An image MAY be linked to multiple events owned by the same organizer.
+An event SHALL be associated with at least one reusable image record through event-image links when created. An image MAY be linked to multiple events owned by the same organizer.
 
 #### Scenario: Draft references existing images
 - **WHEN** a valid request contains existing image IDs
@@ -9,8 +9,8 @@ An event SHALL be associated with zero or more reusable image records through ev
 - **AND** the request SHALL not contain binary file content
 
 #### Scenario: Draft has no images
-- **WHEN** a valid draft request contains no image IDs
-- **THEN** the service SHALL create the draft without image links
+- **WHEN** a draft request omits `images`, sets it to `null`, or supplies an empty array
+- **THEN** the service SHALL reject the request with `400 Bad Request` and SHALL NOT create the event
 
 ### Requirement: Image links retain display type
 An event-image link SHALL support the existing `ImageType` values `COVER` and `GALLERY`. The order of image references in the request SHALL define display order for the event.

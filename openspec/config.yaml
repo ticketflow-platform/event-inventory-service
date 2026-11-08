@@ -17,6 +17,12 @@ context: |
   - Duplication is acceptable when removing it would introduce a worse abstraction.
   - Optimize for readability, maintainability, correctness, and explicit behavior.
   - Prefer explicit and boring code over clever code.
+  - Avoid `var`; use explicit types, especially for Optional values and control flow.
+  - Do not use `Optional.isPresent()` followed by `get()` or null-style checks; use Optional operations such as `map`, `flatMap`, `orElseGet`, or `ifPresentOrElse` where they express the flow clearly.
+  - Keep hashing and fingerprinting logic in a dedicated service with that responsibility, not in domain/application services.
+  - Use enums for fixed sets of domain values instead of collection constants.
+  - Use MapStruct for all mappings between API DTOs and entities, and from entities to response DTOs. Name each mapper after its entity (for example, `EventMapper`). Do not hand-map DTO/entity fields in controllers or services.
+  - Do not use static imports; invoke static members through their declaring class (for example, `EnumType.STRING`).
   - Use existing project conventions before introducing new patterns.
   - Preserve the existing architecture unless the task explicitly requires changing it.
   - Before adding a dependency, verify that the standard library or existing project dependencies cannot solve the problem adequately.
@@ -38,6 +44,14 @@ context: |
   - Tests should verify externally observable behavior rather than implementation details.
   - Do not mock value objects, DTOs, simple domain objects, or code that can be instantiated directly.
   - Prefer focused tests with minimal setup.
+  - Every method in `src/main/java/ru/ticketflowplatform/eventinventoryservice/mapper`, `src/main/java/ru/ticketflowplatform/eventinventoryservice/service`, and `GlobalExceptionHandler` must have parameterized unit-test coverage.
+  - Keep scenarios that share setup in one parameterized test; use separate parameterized tests when their mock requirements differ.
+  - Put test `Arguments.of(...)` scenarios in `src/test/java/ru/ticketflowplatform/eventinventoryservice/scenario/cases` classes named `<ProductionClass>TestCases`.
+  - Name test classes `<ProductionClass>Test`; name test methods and scenario providers `method_whenCondition_shouldExpectedResultTest` and `method_whenCondition_shouldExpectedResultTestCases` respectively.
+  - Give test and scenario annotations Russian display names.
+  - Do not use conditionals, helper methods/classes, or private methods in tests and scenario case classes.
+  - Test classes under `src/main/java/ru/ticketflowplatform/eventinventoryservice/controller` with integration tests using Testcontainers and Docker; use a class-level PostgreSQL container and `@Sql` for database setup. Follow the same naming, parameterization, and scenario conventions.
+  - Keep each database action in its own Flyway migration file, with an uppercase description (for example, `V1__CREATE_EVENTS_SCHEMA.sql`).
   - Do not change unrelated code while implementing a task.
   - Keep diffs small and intentional.
   - Remove dead code introduced or made obsolete by the change.
@@ -63,6 +77,7 @@ context: |
   - Do not add Lombok unless the project already uses it.
   - If Lombok is already used, follow the existing project conventions rather than introducing additional Lombok patterns.
   - Use framework features only when they reduce code or complexity, not simply because they exist.
+  - Return the response DTO from controllers; do not expose or return `ResponseEntity`.
 
   Decision rule:
   Before creating any new class, interface, abstraction, pattern, or dependency, ask:

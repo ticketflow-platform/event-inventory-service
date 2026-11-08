@@ -2,6 +2,7 @@ package ru.ticketflowplatform.eventinventoryservice.domain.model.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -16,8 +17,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import static jakarta.persistence.FetchType.LAZY;
-
 @Entity
 @Table(schema = "events", name = "images")
 @NoArgsConstructor
@@ -30,12 +29,21 @@ public class Image {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @Column(name = "organizer_id", nullable = false)
+    private String organizerId;
+
     @Column(name = "storage_key", nullable = false)
     private String storageKey;
+
+    @Column(name = "content_type", nullable = false)
+    private String contentType;
+
+    @Column(name = "file_size", nullable = false)
+    private long fileSize;
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
-    @OneToMany(mappedBy = "image", fetch = LAZY)
+    @OneToMany(mappedBy = "image", fetch = FetchType.LAZY)
     private List<EventImage> eventImages = new ArrayList<>();
 }

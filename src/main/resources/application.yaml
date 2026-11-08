@@ -1,8 +1,27 @@
 spring:
   application:
     name: event-inventory-service
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/ticketflow}
+    username: ${DB_USERNAME:ticketflow}
+    password: ${DB_PASSWORD:ticketflow}
 
 api:
   urls:
-    event:
-      v1: "/api/v1/events"
+    v1:
+      event: "/api/v1/events"
+
+security:
+  jwt:
+    issuer: ${KEYCLOAK_ISSUER_URI:http://localhost:8080/realms/ticketflow}
+    audience: ${KEYCLOAK_AUDIENCE:ticketflow}
+    jwk-set-uri: ${KEYCLOAK_JWK_SET_URI:http://localhost:8080/realms/ticketflow/protocol/openid-connect/certs}

@@ -26,7 +26,7 @@ The event owns a single organizer identified by the authenticated Keycloak JWT `
 
 ### HTTP contract
 
-Use `POST /api/v1/events`. The request accepts `title`, optional `description`, optional `ageRestriction`, `categoryIds`, and `images`. Each image item contains an `imageId` and existing `ImageType` value (`COVER` or `GALLERY`); the array order is the display order. Omitted age restriction defaults to `0`, meaning no age restriction. The response includes the generated `id`, `organizerId`, supplied event data, empty or resolved category/image references, `DRAFT` status, and creation/update timestamps. `organizerId` is never accepted from the client.
+Use `POST /api/v1/events`. The request requires `title`, `ageRestriction`, at least one `categoryIds` entry, and at least one `images` entry; `description` is optional. Each image item contains an `imageId` and existing `ImageType` value (`COVER` or `GALLERY`); the array order is the display order. `ageRestriction` must be one of `0`, `6`, `12`, `16`, or `18`; `0` means no age restriction. The response includes the generated `id`, `organizerId`, supplied event data, resolved category/image references, `DRAFT` status, and creation/update timestamps. `organizerId` is never accepted from the client.
 
 The request requires an `Idempotency-Key` header. Retrying the same key with the same request returns the original result; reusing it with different request data is rejected.
 
@@ -44,7 +44,7 @@ The application service performs idempotency lookup, reference checks, and event
 
 ### Validation and errors
 
-Require a non-blank title. Default an omitted age restriction to `0` and validate it against `0`, `6`, `12`, `16`, or `18`. Validate that every referenced category is active and every referenced image exists and belongs to the organizer. Return a structured `400` for malformed data, `409` for an idempotency conflict, or a domain-level `422` for invalid references, following the existing API error convention once established.
+Require a non-blank title and an age restriction. Validate the age restriction against `0`, `6`, `12`, `16`, or `18`. Validate that every referenced category is active and every referenced image exists and belongs to the organizer. Return a structured `400` for malformed data, `409` for an idempotency conflict, or a domain-level `422` for invalid references, following the API error convention.
 
 ### Time handling
 

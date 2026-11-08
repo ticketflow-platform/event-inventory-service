@@ -4,14 +4,17 @@
 The inventory service SHALL expose `POST /api/v1/events` and SHALL create an event with status `DRAFT` for an authenticated user with the `ORGANIZER` role. The request SHALL include an `Idempotency-Key` header.
 
 #### Scenario: Draft is created successfully
-- **WHEN** an authenticated organizer submits a valid event title and optional description, age restriction, category IDs, and typed image references
+- **WHEN** an authenticated organizer submits a valid event title, age restriction, at least one category ID, at least one typed image reference, and an optional description
 - **THEN** the service SHALL persist the event and return `201 Created` with its generated identifier and `DRAFT` status
 - **AND** the response SHALL include the organizer identifier from the JWT `sub` claim
 
-#### Scenario: Omitted age restriction uses the default
-- **WHEN** an authenticated organizer omits `ageRestriction`
-- **THEN** the service SHALL persist age restriction `0`
-- **AND** `0` SHALL mean that no minimum age restriction is configured
+#### Scenario: Age restriction is required
+- **WHEN** an authenticated organizer omits `ageRestriction` or supplies `null`
+- **THEN** the service SHALL reject the request with `400 Bad Request`
+
+#### Scenario: No minimum age restriction is selected
+- **WHEN** an authenticated organizer supplies `ageRestriction` as `0`
+- **THEN** the service SHALL persist `0` to mean that no minimum age restriction is configured
 
 #### Scenario: Non-organizer cannot create a draft
 - **WHEN** an authenticated user without the `ORGANIZER` role submits the request
@@ -29,7 +32,7 @@ The service SHALL ignore any organizer identifier supplied by a client and SHALL
 - **THEN** the service SHALL not use that value and SHALL persist the token subject instead
 
 ### Requirement: Draft creation validates event references atomically
-The service SHALL create the event and its category/image links in one transaction. It SHALL reject blank titles, unsupported age restrictions, unknown or inactive categories, and images that do not belong to the organizer without committing a partial event.
+The service SHALL create the event and its category/image links in one transaction. It SHALL reject blank titles, missing categories or images, unsupported age restrictions, unknown or inactive categories, and images that do not belong to the organizer without committing a partial event.
 
 #### Scenario: Request contains an invalid category or image
 - **WHEN** at least one referenced category or image does not exist, an explicitly referenced category is inactive, or an image belongs to another organizer

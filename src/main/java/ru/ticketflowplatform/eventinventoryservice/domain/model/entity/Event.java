@@ -2,7 +2,9 @@ package ru.ticketflowplatform.eventinventoryservice.domain.model.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -18,9 +20,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.EventStatus;
 
-import static jakarta.persistence.EnumType.STRING;
-import static jakarta.persistence.FetchType.LAZY;
-
 @Entity
 @Table(schema = "events", name = "events")
 @NoArgsConstructor
@@ -34,29 +33,30 @@ public class Event {
     private UUID id;
 
     @Column(name = "organizer_id", nullable = false)
-    private UUID organizerId;
+    private String organizerId;
 
     @Column(nullable = false)
     private String title;
 
     private String description;
 
-    @OneToMany(mappedBy = "event", fetch = LAZY)
+    @OneToMany(mappedBy = "event", fetch = FetchType.LAZY)
     private List<EventCategory> eventCategories = new ArrayList<>();
 
-    @OneToMany(mappedBy = "event", fetch = LAZY)
+    @OneToMany(mappedBy = "event", fetch = FetchType.LAZY)
     private List<EventImage> eventImages = new ArrayList<>();
 
     @Column(name = "age_restriction")
     private Integer ageRestriction;
 
-    @Enumerated(STRING)
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private EventStatus status;
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
-    @Column(name = "updated_at")
+    @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
     @Column(name = "published_at")
