@@ -106,6 +106,41 @@ class EventControllerTest {
         );
     }
 
+    @Test
+    @DisplayName("Не позволяет добавить неактивную категорию к мероприятию")
+    @Sql(statements = {
+            "DELETE FROM events.idempotency_keys",
+            "DELETE FROM events.events_images",
+            "DELETE FROM events.events_categories",
+            "DELETE FROM events.events",
+            "DELETE FROM events.images",
+            "DELETE FROM events.categories",
+            "INSERT INTO events.categories (id, name, status, created_at) VALUES ('00000000-0000-0000-0000-000000000011', 'Inactive', 'INACTIVE', CURRENT_TIMESTAMP)"
+    })
+    @Sql(statements = {
+            "DELETE FROM events.idempotency_keys",
+            "DELETE FROM events.events_images",
+            "DELETE FROM events.events_categories",
+            "DELETE FROM events.events",
+            "DELETE FROM events.images",
+            "DELETE FROM events.categories"
+    }, executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
+    void create_whenCategoryIsInactive_shouldRejectAndNotPersistEvent() throws Exception {
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.post("/api/v1/events")
+                        .with(SecurityMockMvcRequestPostProcessors.jwt()
+                                .jwt(jwt -> jwt.subject("organizer-1"))
+                                .authorities(new SimpleGrantedAuthority("ROLE_ORGANIZER")))
+                        .header("Idempotency-Key", "inactive-category-key")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"title":"Concert","categoryIds":[{"categoryId":"00000000-0000-0000-0000-000000000011"}]}
+                                """))
+                .andReturn();
+
+        Assertions.assertEquals(422, result.getResponse().getStatus());
+        Assertions.assertEquals(0, jdbcTemplate.queryForObject("SELECT COUNT(*) FROM events.events", Integer.class));
+    }
+
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource("ru.ticketflowplatform.eventinventoryservice.scenario.cases.EventControllerTestCases#create_whenRequestIsUnauthenticated_shouldReturnUnauthorizedTestCases")
     @DisplayName("Отклоняет неаутентифицированный запрос по сценариям")

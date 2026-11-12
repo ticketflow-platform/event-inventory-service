@@ -1,11 +1,14 @@
 package ru.ticketflowplatform.eventinventoryservice.service;
 
 import jakarta.persistence.EntityManager;
+import java.sql.SQLException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import org.hibernate.exception.ConstraintViolationException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -13,8 +16,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.transaction.support.TransactionCallback;
-import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.dao.DataIntegrityViolationException;
 import ru.ticketflowplatform.eventinventoryservice.domain.exception.IdempotencyConflictException;
 import ru.ticketflowplatform.eventinventoryservice.domain.exception.InvalidEventReferenceException;
 import ru.ticketflowplatform.eventinventoryservice.domain.exception.InvalidEventRequestException;
@@ -59,15 +61,13 @@ class EventServiceTest {
     @Mock
     private HashService hashService;
     @Mock
-    private TransactionTemplate transactionTemplate;
-    @Mock
     private EntityManager entityManager;
     @InjectMocks
     private EventService eventService;
 
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource("ru.ticketflowplatform.eventinventoryservice.scenario.cases.EventServiceTestCases#create_whenStoredKeyMatchesRequest_shouldReturnStoredResponseTestCases")
-    @DisplayName("Возвращает исходный ответ при повторе запроса по сценариям")
+    @DisplayName("╨Т╨╛╨╖╨▓╤А╨░╤Й╨░╨╡╤В ╨╕╤Б╤Е╨╛╨┤╨╜╤Л╨╣ ╨╛╤В╨▓╨╡╤В ╨┐╤А╨╕ ╨┐╨╛╨▓╤В╨╛╤А╨╡ ╨╖╨░╨┐╤А╨╛╤Б╨░ ╨┐╨╛ ╤Б╤Ж╨╡╨╜╨░╤А╨╕╤П╨╝")
     void create_whenStoredKeyMatchesRequest_shouldReturnStoredResponseTest(
             String scenario,
             CreateEventRequestDto request,
@@ -79,20 +79,14 @@ class EventServiceTest {
                 .thenReturn(Optional.of(storedKey));
         Mockito.when(eventRepository.findById(storedKey.getEvent().getId())).thenReturn(Optional.of(storedKey.getEvent()));
         Mockito.when(eventMapper.toResponse(storedKey.getEvent())).thenReturn(expected);
-        Mockito.when(transactionTemplate.execute(Mockito.any())).thenAnswer(invocation -> {
-            TransactionCallback<CreateEventResponseDto> callback = invocation.getArgument(0);
-            return callback.doInTransaction(null);
-        });
-
         Assertions.assertSame(expected, eventService.create(request, "organizer-1", "request-1"));
 
-        Mockito.verify(transactionTemplate).execute(Mockito.any());
         Mockito.verifyNoInteractions(entityManager);
     }
 
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource("ru.ticketflowplatform.eventinventoryservice.scenario.cases.EventServiceTestCases#create_whenStoredKeyHasDifferentFingerprint_shouldThrowConflictTestCases")
-    @DisplayName("Отклоняет повторное использование ключа с другим содержимым по сценариям")
+    @DisplayName("╨Ю╤В╨║╨╗╨╛╨╜╤П╨╡╤В ╨┐╨╛╨▓╤В╨╛╤А╨╜╨╛╨╡ ╨╕╤Б╨┐╨╛╨╗╤М╨╖╨╛╨▓╨░╨╜╨╕╨╡ ╨║╨╗╤О╤З╨░ ╤Б ╨┤╤А╤Г╨│╨╕╨╝ ╤Б╨╛╨┤╨╡╤А╨╢╨╕╨╝╤Л╨╝ ╨┐╨╛ ╤Б╤Ж╨╡╨╜╨░╤А╨╕╤П╨╝")
     void create_whenStoredKeyHasDifferentFingerprint_shouldThrowConflictTest(
             String scenario,
             CreateEventRequestDto request,
@@ -106,12 +100,12 @@ class EventServiceTest {
                 IdempotencyConflictException.class,
                 () -> eventService.create(request, "organizer-1", "request-1")
         );
-        Mockito.verifyNoInteractions(transactionTemplate, eventRepository, entityManager);
+        Mockito.verifyNoInteractions(eventRepository, entityManager);
     }
 
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource("ru.ticketflowplatform.eventinventoryservice.scenario.cases.EventServiceTestCases#create_whenAgeRestrictionIsUnsupported_shouldRejectRequestTestCases")
-    @DisplayName("Отклоняет неподдерживаемое возрастное ограничение по сценариям")
+    @DisplayName("╨Ю╤В╨║╨╗╨╛╨╜╤П╨╡╤В ╨╜╨╡╨┐╨╛╨┤╨┤╨╡╤А╨╢╨╕╨▓╨░╨╡╨╝╨╛╨╡ ╨▓╨╛╨╖╤А╨░╤Б╤В╨╜╨╛╨╡ ╨╛╨│╤А╨░╨╜╨╕╤З╨╡╨╜╨╕╨╡ ╨┐╨╛ ╤Б╤Ж╨╡╨╜╨░╤А╨╕╤П╨╝")
     void create_whenAgeRestrictionIsUnsupported_shouldRejectRequestTest(
             String scenario,
             CreateEventRequestDto request
@@ -124,12 +118,12 @@ class EventServiceTest {
                 InvalidEventRequestException.class,
                 () -> eventService.create(request, "organizer-1", "request-1")
         );
-        Mockito.verifyNoInteractions(transactionTemplate, eventRepository, entityManager);
+        Mockito.verifyNoInteractions(eventRepository, entityManager);
     }
 
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource("ru.ticketflowplatform.eventinventoryservice.scenario.cases.EventServiceTestCases#create_whenCategoryIdsContainDuplicates_shouldRejectRequestTestCases")
-    @DisplayName("Отклоняет повторяющиеся категории по сценариям")
+    @DisplayName("╨Ю╤В╨║╨╗╨╛╨╜╤П╨╡╤В ╨┐╨╛╨▓╤В╨╛╤А╤П╤О╤Й╨╕╨╡╤Б╤П ╨║╨░╤В╨╡╨│╨╛╤А╨╕╨╕ ╨┐╨╛ ╤Б╤Ж╨╡╨╜╨░╤А╨╕╤П╨╝")
     void create_whenCategoryIdsContainDuplicates_shouldRejectRequestTest(
             String scenario,
             CreateEventRequestDto request
@@ -142,12 +136,12 @@ class EventServiceTest {
                 InvalidEventRequestException.class,
                 () -> eventService.create(request, "organizer-1", "request-1")
         );
-        Mockito.verifyNoInteractions(categoryRepository, imageRepository, transactionTemplate, eventRepository);
+        Mockito.verifyNoInteractions(categoryRepository, imageRepository, eventRepository);
     }
 
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource("ru.ticketflowplatform.eventinventoryservice.scenario.cases.EventServiceTestCases#create_whenImageIdsContainDuplicates_shouldRejectRequestTestCases")
-    @DisplayName("Отклоняет повторяющиеся изображения по сценариям")
+    @DisplayName("╨Ю╤В╨║╨╗╨╛╨╜╤П╨╡╤В ╨┐╨╛╨▓╤В╨╛╤А╤П╤О╤Й╨╕╨╡╤Б╤П ╨╕╨╖╨╛╨▒╤А╨░╨╢╨╡╨╜╨╕╤П ╨┐╨╛ ╤Б╤Ж╨╡╨╜╨░╤А╨╕╤П╨╝")
     void create_whenImageIdsContainDuplicates_shouldRejectRequestTest(
             String scenario,
             CreateEventRequestDto request
@@ -160,12 +154,12 @@ class EventServiceTest {
                 InvalidEventRequestException.class,
                 () -> eventService.create(request, "organizer-1", "request-1")
         );
-        Mockito.verifyNoInteractions(categoryRepository, imageRepository, transactionTemplate, eventRepository);
+        Mockito.verifyNoInteractions(categoryRepository, imageRepository, eventRepository);
     }
 
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource("ru.ticketflowplatform.eventinventoryservice.scenario.cases.EventServiceTestCases#create_whenCategoryIsMissingOrInactive_shouldRejectRequestTestCases")
-    @DisplayName("Отклоняет отсутствующую или неактивную категорию по сценариям")
+    @DisplayName("╨Ю╤В╨║╨╗╨╛╨╜╤П╨╡╤В ╨╛╤В╤Б╤Г╤В╤Б╤В╨▓╤Г╤О╤Й╤Г╤О ╨╕╨╗╨╕ ╨╜╨╡╨░╨║╤В╨╕╨▓╨╜╤Г╤О ╨║╨░╤В╨╡╨│╨╛╤А╨╕╤О ╨┐╨╛ ╤Б╤Ж╨╡╨╜╨░╤А╨╕╤П╨╝")
     void create_whenCategoryIsMissingOrInactive_shouldRejectRequestTest(
             String scenario,
             CreateEventRequestDto request,
@@ -183,12 +177,12 @@ class EventServiceTest {
                 InvalidEventReferenceException.class,
                 () -> eventService.create(request, "organizer-1", "request-1")
         );
-        Mockito.verifyNoInteractions(imageRepository, transactionTemplate, eventRepository, entityManager);
+        Mockito.verifyNoInteractions(imageRepository, eventRepository, entityManager);
     }
 
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource("ru.ticketflowplatform.eventinventoryservice.scenario.cases.EventServiceTestCases#create_whenImageIsMissingOrForeign_shouldRejectRequestTestCases")
-    @DisplayName("Отклоняет отсутствующее или чужое изображение по сценариям")
+    @DisplayName("╨Ю╤В╨║╨╗╨╛╨╜╤П╨╡╤В ╨╛╤В╤Б╤Г╤В╤Б╤В╨▓╤Г╤О╤Й╨╡╨╡ ╨╕╨╗╨╕ ╤З╤Г╨╢╨╛╨╡ ╨╕╨╖╨╛╨▒╤А╨░╨╢╨╡╨╜╨╕╨╡ ╨┐╨╛ ╤Б╤Ж╨╡╨╜╨░╤А╨╕╤П╨╝")
     void create_whenImageIsMissingOrForeign_shouldRejectRequestTest(
             String scenario,
             CreateEventRequestDto request,
@@ -215,12 +209,12 @@ class EventServiceTest {
                 InvalidEventReferenceException.class,
                 () -> eventService.create(request, "organizer-1", "request-1")
         );
-        Mockito.verifyNoInteractions(transactionTemplate, eventRepository, entityManager);
+        Mockito.verifyNoInteractions(eventRepository, entityManager);
     }
 
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource("ru.ticketflowplatform.eventinventoryservice.scenario.cases.EventServiceTestCases#create_whenRequiredReferencesAreMissing_shouldRejectRequestTestCases")
-    @DisplayName("Создаёт черновик только с названием")
+    @DisplayName("╨б╨╛╨╖╨┤╨░╤С╤В ╤З╨╡╤А╨╜╨╛╨▓╨╕╨║ ╤В╨╛╨╗╤М╨║╨╛ ╤Б ╨╜╨░╨╖╨▓╨░╨╜╨╕╨╡╨╝")
     void create_whenOnlyTitleIsProvided_shouldCreateDraft(String scenario, CreateEventRequestDto request) {
         Mockito.when(hashService.hash(request)).thenReturn("fingerprint");
         Mockito.when(idempotencyKeyRepository.findByOrganizerIdAndKey("organizer-1", "request-1"))
@@ -234,18 +228,13 @@ class EventServiceTest {
         Mockito.when(eventMapper.toResponse(event)).thenReturn(Mockito.mock(CreateEventResponseDto.class));
         Mockito.when(idempotencyKeyMapper.toEntity(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(),
                 Mockito.eq(event), Mockito.any())).thenReturn(new IdempotencyKey());
-        Mockito.when(transactionTemplate.execute(Mockito.any())).thenAnswer(invocation -> {
-            TransactionCallback<CreateEventResponseDto> callback = invocation.getArgument(0);
-            return callback.doInTransaction(null);
-        });
-
         Assertions.assertNotNull(eventService.create(request, "organizer-1", "request-1"));
         Mockito.verifyNoInteractions(categoryRepository, imageRepository);
     }
 
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource("ru.ticketflowplatform.eventinventoryservice.scenario.cases.EventServiceTestCases#create_whenReferencesAreValid_shouldPersistAllLinksInOneTransactionTestCases")
-    @DisplayName("Создаёт связи категорий и изображений в одной транзакции по сценариям")
+    @DisplayName("╨б╨╛╨╖╨┤╨░╤С╤В ╤Б╨▓╤П╨╖╨╕ ╨║╨░╤В╨╡╨│╨╛╤А╨╕╨╣ ╨╕ ╨╕╨╖╨╛╨▒╤А╨░╨╢╨╡╨╜╨╕╨╣ ╨▓ ╨╛╨┤╨╜╨╛╨╣ ╤В╤А╨░╨╜╨╖╨░╨║╤Ж╨╕╨╕ ╨┐╨╛ ╤Б╤Ж╨╡╨╜╨░╤А╨╕╤П╨╝")
     void create_whenReferencesAreValid_shouldPersistAllLinksInOneTransactionTest(
             String scenario,
             CreateEventRequestDto request,
@@ -300,16 +289,61 @@ class EventServiceTest {
                     linkedImage
             );
         });
-        Mockito.when(transactionTemplate.execute(Mockito.any())).thenAnswer(invocation -> {
-            TransactionCallback<CreateEventResponseDto> callback = invocation.getArgument(0);
-            return callback.doInTransaction(null);
-        });
-
         Assertions.assertSame(expected, eventService.create(request, "organizer-1", "request-1"));
 
-        Mockito.verify(transactionTemplate).execute(Mockito.any());
         Mockito.verify(entityManager, Mockito.times(expectedCategoryLinks)).persist(Mockito.any(EventCategory.class));
         Mockito.verify(entityManager, Mockito.times(expectedImageLinks)).persist(Mockito.any(EventImage.class));
-        Mockito.verify(idempotencyKeyRepository).save(Mockito.any(IdempotencyKey.class));
+        Mockito.verify(idempotencyKeyRepository).saveAndFlush(Mockito.any(IdempotencyKey.class));
+    }
+
+    @Test
+    @DisplayName("Преобразует конфликт уникальности ключа в 409")
+    void create_whenIdempotencyKeyUniqueConstraintConflicts_shouldReturn409() {
+        CreateEventRequestDto request = new CreateEventRequestDto("Concert", null, null, null, null);
+        Event event = new Event();
+        event.setEventCategories(new java.util.ArrayList<>());
+        event.setEventImages(new java.util.ArrayList<>());
+        Mockito.when(hashService.hash(request)).thenReturn("fingerprint");
+        Mockito.when(idempotencyKeyRepository.findByOrganizerIdAndKey("organizer-1", "request-1"))
+                .thenReturn(Optional.empty());
+        Mockito.when(eventMapper.toEntity(Mockito.eq(request), Mockito.eq("organizer-1"), Mockito.isNull(), Mockito.any()))
+                .thenReturn(event);
+        Mockito.when(eventRepository.save(event)).thenReturn(event);
+        Mockito.when(idempotencyKeyMapper.toEntity(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(),
+                Mockito.eq(event), Mockito.any())).thenReturn(new IdempotencyKey());
+        Mockito.doThrow(violation("uq_idempotency_organizer_key"))
+                .when(idempotencyKeyRepository).saveAndFlush(Mockito.any(IdempotencyKey.class));
+
+        IdempotencyConflictException exception = Assertions.assertThrows(IdempotencyConflictException.class,
+                () -> eventService.create(request, "organizer-1", "request-1"));
+
+        Assertions.assertEquals(409, exception.getStatus());
+    }
+
+    @Test
+    @DisplayName("Не маскирует другие нарушения ограничений базы данных")
+    void create_whenAnotherConstraintFails_shouldRethrowDatabaseError() {
+        CreateEventRequestDto request = new CreateEventRequestDto("Concert", null, null, null, null);
+        Event event = new Event();
+        event.setEventCategories(new java.util.ArrayList<>());
+        event.setEventImages(new java.util.ArrayList<>());
+        DataIntegrityViolationException expected = violation("events_images_image_id_fkey");
+        Mockito.when(hashService.hash(request)).thenReturn("fingerprint");
+        Mockito.when(idempotencyKeyRepository.findByOrganizerIdAndKey("organizer-1", "request-1"))
+                .thenReturn(Optional.empty());
+        Mockito.when(eventMapper.toEntity(Mockito.eq(request), Mockito.eq("organizer-1"), Mockito.isNull(), Mockito.any()))
+                .thenReturn(event);
+        Mockito.when(eventRepository.save(event)).thenReturn(event);
+        Mockito.when(idempotencyKeyMapper.toEntity(Mockito.anyString(), Mockito.anyString(), Mockito.anyString(),
+                Mockito.eq(event), Mockito.any())).thenReturn(new IdempotencyKey());
+        Mockito.doThrow(expected).when(idempotencyKeyRepository).saveAndFlush(Mockito.any(IdempotencyKey.class));
+
+        Assertions.assertSame(expected, Assertions.assertThrows(DataIntegrityViolationException.class,
+                () -> eventService.create(request, "organizer-1", "request-1")));
+    }
+
+    private DataIntegrityViolationException violation(String constraintName) {
+        return new DataIntegrityViolationException("Constraint violation",
+                new ConstraintViolationException("Constraint violation", new SQLException("Constraint violation"), constraintName));
     }
 }

@@ -20,7 +20,7 @@ public record CreateEventRequestDto(
         String description,
 
         @Schema(
-                description = "Category references; required before publication",
+                description = "Active category references; required before publication",
                 requiredMode = NOT_REQUIRED,
                 example = "[{\"categoryId\":\"00000000-0000-0000-0000-000000000011\"}]"
         )

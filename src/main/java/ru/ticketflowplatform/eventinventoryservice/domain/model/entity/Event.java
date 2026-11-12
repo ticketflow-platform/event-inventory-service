@@ -67,4 +67,16 @@ public class Event {
 
     @Column(name = "completed_at")
     private Instant completedAt;
+
+    public Event addEventCategories(List<EventCategory> eventCategories) {
+        this.eventCategories.addAll(eventCategories);
+        eventCategories.forEach(category -> category.setEvent(this));
+        return this;
+    }
+
+    public Event addEventImages(List<EventImage> eventImages) {
+        this.eventImages.addAll(eventImages);
+        eventImages.forEach(eventImage -> eventImage.setEvent(this));
+        return this;
+    }
 }

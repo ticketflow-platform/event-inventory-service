@@ -6,14 +6,15 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.exception.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.transaction.annotation.Transactional;
 import ru.ticketflowplatform.eventinventoryservice.domain.exception.IdempotencyConflictException;
 import ru.ticketflowplatform.eventinventoryservice.domain.exception.InvalidEventReferenceException;
 import ru.ticketflowplatform.eventinventoryservice.domain.exception.InvalidEventRequestException;
@@ -42,6 +43,8 @@ import ru.ticketflowplatform.eventinventoryservice.mapper.IdempotencyKeyMapper;
 @RequiredArgsConstructor
 public class EventService {
 
+    private static final String IDEMPOTENCY_UNIQUE_CONSTRAINT = "uq_idempotency_organizer_key";
+
     private final EventRepository eventRepository;
     private final CategoryRepository categoryRepository;
     private final ImageRepository imageRepository;
@@ -51,69 +54,65 @@ public class EventService {
     private final EventImageMapper eventImageMapper;
     private final IdempotencyKeyMapper idempotencyKeyMapper;
     private final HashService hashService;
-    private final TransactionTemplate transactionTemplate;
     private final EntityManager entityManager;
 
+    @Transactional
     public CreateEventResponseDto create(CreateEventRequestDto request, String organizerId, String idempotencyKey) {
         String requestHash = hashService.hash(request);
         Optional<IdempotencyKey> storedKey = idempotencyKeyRepository.findByOrganizerIdAndKey(organizerId, idempotencyKey);
-
-        if (storedKey.isEmpty()) {
-            Integer ageRestriction = request.ageRestriction();
-            if (ageRestriction != null && !AgeRestriction.isSupport(ageRestriction)) {
-                throw new InvalidEventRequestException("Неверная возрастная группа", "Возрастная группа должна быть: 0, 6, 12, 16, or 18");
+        if (storedKey.isPresent()) {
+            IdempotencyKey key = storedKey.orElseThrow();
+            if (!key.getRequestHash().equals(requestHash)) {
+                throw new IdempotencyConflictException("Такое мероприятие уже создано", String.format("Мероприятие с ключом: %s уже создано", key.getKey()));
             }
 
-            List<UUID> categoryIds = request.categoryIds() == null
-                    ? List.of() : request.categoryIds().stream().map(CategoryRequestDto::categoryId).toList();
-            List<ImageRequestDto> imageRequests = request.images() == null ? List.of() : request.images();
+            return eventRepository.findById(key.getEvent().getId())
+                    .map(eventMapper::toResponse)
+                    .orElseThrow();
+        }
 
-            ensureUnique(categoryIds, "Категории должны быть без повторов", "Повторяющиеся категории: %s");
+        Integer ageRestriction = request.ageRestriction();
+        if (ageRestriction != null && !AgeRestriction.isSupport(ageRestriction)) {
+            throw new InvalidEventRequestException("Неверная возрастная группа", "Возрастная группа должна быть: 0, 6, 12, 16, or 18");
+        }
 
-            List<UUID> imageIds = imageRequests.stream().map(ImageRequestDto::imageId).toList();
-            ensureUnique(imageIds, "Изображения должны быть без повторов", "Повторяющиеся изображения: %s");
+        List<UUID> categoryIds = request.categoryIds() == null ? List.of() : request.categoryIds().stream().map(CategoryRequestDto::categoryId).toList();
+        List<ImageRequestDto> imageRequests = request.images() == null ? List.of() : request.images();
 
-            List<Category> categories = categoryIds.isEmpty() ? List.of() : findActiveCategories(categoryIds);
-            List<Image> images = findOwnedImages(imageRequests, organizerId);
-            Map<UUID, Image> imagesById = images.stream().collect(Collectors.toMap(Image::getId, image -> image));
+        ensureUnique(categoryIds, "Категории должны быть без повторов", "Повторяющиеся категории: %s");
 
-            Instant now = Instant.now().truncatedTo(ChronoUnit.MICROS);
-            Event newEvent = eventMapper.toEntity(request, organizerId, ageRestriction, now);
-            return Objects.requireNonNull(transactionTemplate.execute(_ -> {
-                Event savedEvent = eventRepository.save(newEvent);
+        List<UUID> imageIds = imageRequests.stream().map(ImageRequestDto::imageId).toList();
+        ensureUnique(imageIds, "Изображения должны быть без повторов", "Повторяющиеся изображения: %s");
 
-                for (Category category : categories) {
-                    EventCategory link = eventCategoryMapper.toEntity(savedEvent, category, now);
-                    savedEvent.getEventCategories().add(link);
-                    entityManager.persist(link);
-                }
+        List<Category> categories = categoryIds.isEmpty() ? List.of() : findActiveCategories(categoryIds);
+        List<Image> images = findOwnedImages(imageRequests, organizerId);
+        Map<UUID, Image> imagesById = images.stream().collect(Collectors.toMap(Image::getId, image -> image));
 
-                for (ImageRequestDto imageRequest : imageRequests) {
-                    EventImage link = eventImageMapper.toEntity(
-                            savedEvent, imagesById.get(imageRequest.imageId()), imageRequest.type(), now
-                    );
-                    savedEvent.getEventImages().add(link);
-                    entityManager.persist(link);
-                }
+        Instant now = Instant.now().truncatedTo(ChronoUnit.MICROS);
+        Event newEvent = eventMapper.toEntity(request, organizerId, ageRestriction, now);
+        Event savedEvent = eventRepository.save(newEvent);
 
-                idempotencyKeyRepository.save(
-                        idempotencyKeyMapper.toEntity(organizerId, idempotencyKey, requestHash, savedEvent, now)
+        List<EventCategory> eventCategories = categories.stream().map(category -> eventCategoryMapper.toEntity(savedEvent, category, now)).toList();
+        Event eventWithEventCategories = savedEvent.addEventCategories(eventCategories);
+
+        List<EventImage> eventImages = imageRequests.stream().map(imageRequest -> eventImageMapper.toEntity(savedEvent, imagesById.get(imageRequest.imageId()), imageRequest.type(), now)).toList();
+        Event eventWithImages = eventWithEventCategories.addEventImages(eventImages);
+
+        try {
+            idempotencyKeyRepository.saveAndFlush(
+                    idempotencyKeyMapper.toEntity(organizerId, idempotencyKey, requestHash, eventWithImages, now)
+            );
+        } catch (DataIntegrityViolationException exception) {
+            if (isIdempotencyKeyConflict(exception)) {
+                throw new IdempotencyConflictException(
+                        "Такое мероприятие уже создано",
+                        String.format("Мероприятие с ключом идемпотентности: %s уже создано", idempotencyKey)
                 );
-
-                return eventMapper.toResponse(savedEvent);
-            }));
+            }
+            throw exception;
         }
 
-        IdempotencyKey stored = storedKey.orElseThrow();
-        if (!stored.getRequestHash().equals(requestHash)) {
-            throw new IdempotencyConflictException("Такое мероприятие уже создано", String.format("Мероприятие с ключом: %s уже создано", stored.getId()));
-        }
-
-        return Objects.requireNonNull(transactionTemplate.execute(_ ->
-                eventRepository.findById(stored.getEvent().getId())
-                        .map(eventMapper::toResponse)
-                        .orElseThrow()
-        ));
+        return eventMapper.toResponse(savedEvent);
     }
 
     private void ensureUnique(List<UUID> ids, String message, String detail) {
@@ -137,10 +136,7 @@ public class EventService {
         return categories;
     }
 
-    private List<Image> findOwnedImages(
-            List<ImageRequestDto> imageRequests,
-            String organizerId
-    ) {
+    private List<Image> findOwnedImages(List<ImageRequestDto> imageRequests, String organizerId) {
         List<UUID> ids = imageRequests.stream().map(ImageRequestDto::imageId).toList();
         List<Image> images = ids.isEmpty() ? List.of() : imageRepository.findAllByIdInAndOrganizerId(ids, organizerId);
         Set<UUID> foundIds = images.stream().map(Image::getId).collect(Collectors.toSet());
@@ -171,5 +167,15 @@ public class EventService {
 
     private String formatIds(List<UUID> ids) {
         return String.join(", ", ids.stream().map(UUID::toString).toList());
+    }
+
+    private boolean isIdempotencyKeyConflict(Throwable exception) {
+        for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
+            if (cause instanceof ConstraintViolationException violation
+                    && IDEMPOTENCY_UNIQUE_CONSTRAINT.equals(violation.getConstraintName())) {
+                return true;
+            }
+        }
+        return false;
     }
 }
