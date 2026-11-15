@@ -26,7 +26,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     ErrorResponseDto validation(MethodArgumentNotValidException exception) {
-        return errorMapper.toResponse(400, "Bad Request", "Request validation failed",
+        return errorMapper.toResponse(HttpStatus.BAD_REQUEST.value(), "Bad Request", "Request validation failed",
                 exception.getBindingResult().getFieldErrors().stream().map(errorMapper::toFieldError).toList());
     }
 
@@ -52,7 +52,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    ErrorResponseDto unreadableRequest(HttpMessageNotReadableException exception) {
+    ErrorResponseDto unreadableRequest() {
         return errorMapper.toResponse(HttpStatus.BAD_REQUEST.value(),
                 "Bad Request", "Malformed request body", List.of());
     }

@@ -169,7 +169,7 @@ class EventServiceTest {
         Mockito.when(idempotencyKeyRepository.findByOrganizerIdAndKey("organizer-1", "request-1"))
                 .thenReturn(Optional.empty());
         Mockito.when(categoryRepository.findAllByIdInAndStatus(
-                request.categoryIds().stream().map(CreateEventRequestDto.CategoryRequestDto::categoryId).toList(),
+                request.categoryIds().stream().map(CreateEventRequestDto.CategoryRequestDto::id).toList(),
                 ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.CategoryStatus.ACTIVE
         )).thenReturn(foundCategories);
 
@@ -193,16 +193,16 @@ class EventServiceTest {
                 .thenReturn(Optional.empty());
         List<Category> categories = request.categoryIds().stream().map(categoryRequest -> {
             Category category = new Category();
-            category.setId(categoryRequest.categoryId());
+            category.setId(categoryRequest.id());
             category.setStatus(ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.CategoryStatus.ACTIVE);
             return category;
         }).toList();
         Mockito.when(categoryRepository.findAllByIdInAndStatus(
-                request.categoryIds().stream().map(CreateEventRequestDto.CategoryRequestDto::categoryId).toList(),
+                request.categoryIds().stream().map(CreateEventRequestDto.CategoryRequestDto::id).toList(),
                 ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.CategoryStatus.ACTIVE
         )).thenReturn(categories);
         Mockito.when(imageRepository.findAllByIdInAndOrganizerId(
-                request.images().stream().map(ImageRequestDto::imageId).toList(), "organizer-1"
+                request.images().stream().map(ImageRequestDto::id).toList(), "organizer-1"
         )).thenReturn(foundImages);
 
         Assertions.assertThrows(

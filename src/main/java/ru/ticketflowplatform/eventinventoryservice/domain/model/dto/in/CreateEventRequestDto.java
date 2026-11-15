@@ -22,14 +22,14 @@ public record CreateEventRequestDto(
         @Schema(
                 description = "Active category references; required before publication",
                 requiredMode = NOT_REQUIRED,
-                example = "[{\"categoryId\":\"00000000-0000-0000-0000-000000000011\"}]"
+                example = "[{\"id\":\"00000000-0000-0000-0000-000000000011\"}]"
         )
         List<@Valid CategoryRequestDto> categoryIds,
 
         @Schema(
                 description = "Image references; required before publication",
                 requiredMode = NOT_REQUIRED,
-                example = "[{\"imageId\":\"00000000-0000-0000-0000-000000000012\",\"type\":\"COVER\"}]"
+                example = "[{\"id\":\"00000000-0000-0000-0000-000000000012\",\"type\":\"COVER\"}]"
         )
         List<@Valid ImageRequestDto> images,
 
@@ -43,7 +43,7 @@ public record CreateEventRequestDto(
 ) {
     public record ImageRequestDto(
             @Schema(requiredMode = REQUIRED, example = "00000000-0000-0000-0000-000000000012")
-            @NotNull UUID imageId,
+            @NotNull UUID id,
             @Schema(requiredMode = REQUIRED, example = "COVER")
             @NotNull ImageType type
     ) {
@@ -51,7 +51,7 @@ public record CreateEventRequestDto(
 
     public record CategoryRequestDto(
             @Schema(requiredMode = REQUIRED, example = "00000000-0000-0000-0000-000000000012")
-            @NotNull UUID categoryId
+            @NotNull UUID id
     ) {
     }
 }

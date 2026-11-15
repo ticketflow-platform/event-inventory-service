@@ -31,7 +31,7 @@ public class IdempotencyKey {
     @Column(name = "organizer_id", nullable = false)
     private String organizerId;
 
-    @Column(name = "idempotency_key", nullable = false)
+    @Column(name = "key", nullable = false)
     private String key;
 
     @Column(name = "request_hash", nullable = false, length = 64)

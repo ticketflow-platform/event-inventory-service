@@ -39,7 +39,7 @@ public class Image {
     private String contentType;
 
     @Column(name = "file_size", nullable = false)
-    private long fileSize;
+    private Long fileSize;
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
