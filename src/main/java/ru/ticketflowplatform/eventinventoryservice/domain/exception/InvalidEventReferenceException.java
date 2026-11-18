@@ -5,7 +5,7 @@ import org.springframework.http.HttpStatus;
 
 public class InvalidEventReferenceException extends ErrorResponseException {
 
-    public InvalidEventReferenceException(String message, String detail) {
-        super(HttpStatus.UNPROCESSABLE_CONTENT.value(), message, detail, List.of());
+    public InvalidEventReferenceException(String messageCode, String detailCode, Object... arguments) {
+        super(HttpStatus.UNPROCESSABLE_CONTENT.value(), messageCode, detailCode, List.of(), arguments);
     }
 }

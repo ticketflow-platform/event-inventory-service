@@ -61,32 +61,38 @@ public class EventService {
     public CreateEventResponseDto create(CreateEventRequestDto request, String organizerId, String idempotencyKey) {
         String requestHash = hashService.hash(request);
         Optional<IdempotencyKey> storedKey = idempotencyKeyRepository.findByOrganizerIdAndKey(organizerId, idempotencyKey);
+
         if (storedKey.isPresent()) {
             IdempotencyKey key = storedKey.orElseThrow();
             if (!key.getRequestHash().equals(requestHash)) {
-                throw new IdempotencyConflictException("Такое мероприятие уже создано", String.format("Мероприятие с ключом: '%s' уже создано", key.getKey()));
+                throw new IdempotencyConflictException(
+                        "api.event.idempotency_conflict.message",
+                        "api.event.idempotency_conflict.detail",
+                        key.getKey()
+                );
             }
 
             UUID eventId = key.getEvent().getId();
-            return eventRepository.findById(eventId)
-                    .map(eventMapper::toResponse)
-                    .orElseThrow(() -> new EventNotFoundException("Мероприятие не найдено", String.format("Мероприятие с id: '%s' и ключом: '%s' не найдено", eventId, key.getKey())));
+            return eventRepository.findById(eventId).map(eventMapper::toResponse).orElseThrow(
+                () -> new EventNotFoundException("api.event.not_found.message", "api.event.not_found.detail", eventId, key.getKey())
+            );
         }
 
         Integer ageRestriction = request.ageRestriction();
         if (ageRestriction != null && !AgeRestriction.isSupport(ageRestriction)) {
-            throw new InvalidEventRequestException("Неверная возрастная группа", "Возрастная группа должна быть: 0, 6, 12, 16, or 18");
+            throw new InvalidEventRequestException("api.event.age_restriction.invalid.message", "api.event.age_restriction.invalid.detail");
         }
 
         List<UUID> categoryIds = CollectionUtil.mapOrEmpty(request.categoryIds(), CategoryRequestDto::id, ArrayList::new);
-        ensureUnique(categoryIds, "Категории должны быть без повторов", "Повторяющиеся категории: '%s'");
+        ensureUnique(categoryIds, "api.event.categories.duplicate.message", "api.event.categories.duplicate.detail");
 
-        List<ImageRequestDto> imageRequests = request.images();
+        List<ImageRequestDto> imageRequests = CollectionUtil.mapOrEmpty(request.images(), imageRequest -> imageRequest, ArrayList::new);
         List<UUID> imageIds = CollectionUtil.mapOrEmpty(imageRequests, ImageRequestDto::id, ArrayList::new);
-        ensureUnique(imageIds, "Изображения должны быть без повторов", "Повторяющиеся изображения: '%s'");
+        ensureUnique(imageIds, "api.event.images.duplicate.message", "api.event.images.duplicate.detail");
 
         List<Category> categories = findActiveCategories(categoryIds);
         List<Image> images = findOwnedImages(imageIds, organizerId);
+
         Map<UUID, Category> categoriesById = categories.stream().collect(Collectors.toMap(Category::getId, category -> category));
         Map<UUID, Image> imagesById = images.stream().collect(Collectors.toMap(Image::getId, image -> image));
 
@@ -95,7 +101,11 @@ public class EventService {
         Event savedEvent = eventRepository.save(newEvent);
 
         List<EventCategory> eventCategories = prepareEventCategories(
-                categoryIds.stream().map(categoriesById::get).toList(), savedEvent, now);
+            categoryIds.stream().map(categoriesById::get).toList(),
+            savedEvent,
+            now
+        );
+
         Event eventWithEventCategories = savedEvent.addEventCategories(eventCategories);
 
         List<EventImage> eventImages = prepareEventImages(imageRequests, savedEvent, imagesById, now);
@@ -103,13 +113,14 @@ public class EventService {
 
         try {
             idempotencyKeyRepository.saveAndFlush(
-                    idempotencyKeyMapper.toEntity(organizerId, idempotencyKey, requestHash, eventWithImages, now)
+                idempotencyKeyMapper.toEntity(organizerId, idempotencyKey, requestHash, eventWithImages, now)
             );
         } catch (DataIntegrityViolationException dataIntegrityViolationException) {
             if (isIdempotencyKeyConflict(dataIntegrityViolationException)) {
                 throw new IdempotencyConflictException(
-                        "Такое мероприятие уже создано",
-                        String.format("Мероприятие с ключом идемпотентности: '%s' уже создано", idempotencyKey)
+                        "api.event.idempotency_conflict.message",
+                        "api.event.idempotency_conflict.detail",
+                        idempotencyKey
                 );
             }
             throw dataIntegrityViolationException;
@@ -118,25 +129,34 @@ public class EventService {
         return eventMapper.toResponse(savedEvent);
     }
 
-    private void ensureUnique(List<UUID> ids, String message, String detail) {
+    private void ensureUnique(List<UUID> ids, String messageCode, String detailCode) {
         Set<UUID> seen = new HashSet<>();
         List<UUID> duplicates = ids.stream().filter(id -> !seen.add(id)).distinct().toList();
         if (!duplicates.isEmpty()) {
-            throw new InvalidEventRequestException(message,
-                    detail.formatted(String.join(", ", duplicates.stream().map(UUID::toString).toList())));
+            throw new InvalidEventRequestException(messageCode, detailCode, formatIds(duplicates));
         }
     }
 
     private List<Category> findActiveCategories(List<UUID> ids) {
-        List<Category> categories = ids.isEmpty() ? List.of()
-                : categoryRepository.findAllByIdInAndStatus(ids, CategoryStatus.ACTIVE);
+        List<Category> categories = ids.isEmpty() ? List.of() : categoryRepository.findAllByIdInAndStatus(ids, CategoryStatus.ACTIVE);
 
         Set<UUID> foundIds = categories.stream().map(Category::getId).collect(Collectors.toSet());
         List<UUID> missingIds = ids.stream().filter(id -> !foundIds.contains(id)).distinct().toList();
         if (!missingIds.isEmpty()) {
             throw new InvalidEventReferenceException(
-                    "Категория не найдена",
-                    prepareDetail(missingIds, "Категория с id: %s не найдена", "Категории с id: %s не найдены")
+                    selectMessageCode(
+                        missingIds,
+                        "api.event.categories.not_found.message.one",
+                        "api.event.categories.not_found.message.many"
+                    ),
+
+                    selectMessageCode(
+                        missingIds,
+                        "api.event.categories.not_found.detail.one",
+                        "api.event.categories.not_found.detail.many"
+                    ),
+
+                    formatIds(missingIds)
             );
         }
 
@@ -149,17 +169,17 @@ public class EventService {
         List<UUID> missingIds = ids.stream().filter(id -> !foundIds.contains(id)).distinct().toList();
         if (!missingIds.isEmpty()) {
             throw new InvalidEventReferenceException(
-                    "Изображение не найдено",
-                    prepareDetail(missingIds, "Изображение с id: '%s' не найдено", "Изображения с id: '%s' не найдены")
+                    selectMessageCode(missingIds, "api.event.images.not_found.message.one", "api.event.images.not_found.message.many"),
+                    selectMessageCode(missingIds, "api.event.images.not_found.detail.one", "api.event.images.not_found.detail.many"),
+                    formatIds(missingIds)
             );
         }
 
         return images;
     }
 
-    private String prepareDetail(List<UUID> ids, String one, String many) {
-        String expression = ids.size() == 1 ? one : many;
-        return expression.formatted(formatIds(ids));
+    private String selectMessageCode(List<UUID> ids, String one, String many) {
+        return ids.size() == 1 ? one : many;
     }
 
     private String formatIds(List<UUID> ids) {
@@ -167,15 +187,18 @@ public class EventService {
     }
 
     private List<EventCategory> prepareEventCategories(List<Category> categories, Event savedEvent, Instant now) {
-        return categories.stream().map(category -> eventCategoryMapper.toEntity(
-                savedEvent, category, now)
-        ).toList();
+        return categories.stream().map(category -> eventCategoryMapper.toEntity(savedEvent, category, now)).toList();
     }
 
-    private List<EventImage> prepareEventImages(List<ImageRequestDto> imageRequests, Event savedEvent, Map<UUID, Image> imagesById, Instant now) {
-        return imageRequests.stream().map(imageRequest -> eventImageMapper.toEntity(
-                savedEvent, imagesById.get(imageRequest.id()), imageRequest.type(), now)
-        ).toList();
+    private List<EventImage> prepareEventImages(
+            List<ImageRequestDto> imageRequests,
+            Event savedEvent,
+            Map<UUID, Image> imagesById,
+            Instant now) {
+        return imageRequests.stream()
+                .map(
+                    imageRequest -> eventImageMapper.toEntity(savedEvent, imagesById.get(imageRequest.id()), imageRequest.type(), now)
+                ).toList();
     }
 
     private boolean isIdempotencyKeyConflict(Throwable exception) {

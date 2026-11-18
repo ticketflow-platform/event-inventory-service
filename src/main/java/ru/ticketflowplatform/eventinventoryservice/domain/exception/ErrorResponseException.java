@@ -8,15 +8,32 @@ import ru.ticketflowplatform.eventinventoryservice.domain.model.dto.out.ErrorRes
 public class ErrorResponseException extends RuntimeException {
 
     private final int status;
-    private final String message;
-    private final String detail;
+    private final String messageCode;
+    private final String detailCode;
+    private final Object[] arguments;
     private final List<FieldErrorResponseDto> errors;
 
-    public ErrorResponseException(int status, String message, String detail, List<FieldErrorResponseDto> errors) {
-        super(detail);
+    public ErrorResponseException(
+            int status,
+            String messageCode,
+            String detailCode,
+            List<FieldErrorResponseDto> errors,
+            Object... arguments) {
+        this(status, messageCode, detailCode, null, errors, arguments);
+    }
+
+    protected ErrorResponseException(
+            int status,
+            String messageCode,
+            String detailCode,
+            Throwable cause,
+            List<FieldErrorResponseDto> errors,
+            Object... arguments) {
+        super(detailCode, cause);
         this.status = status;
-        this.message = message;
-        this.detail = detail;
+        this.messageCode = messageCode;
+        this.detailCode = detailCode;
+        this.arguments = arguments.clone();
         this.errors = errors;
     }
 }

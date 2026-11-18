@@ -3,7 +3,6 @@ package ru.ticketflowplatform.eventinventoryservice.scenario.cases;
 import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.provider.Arguments;
-import org.springframework.http.HttpStatus;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
@@ -25,7 +24,7 @@ public final class GlobalExceptionHandlerTestCases {
                 exception,
                 new ErrorResponseDto(
                         400,
-                        HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                        "Bad request",
                         "Request validation failed",
                         List.of(new ru.ticketflowplatform.eventinventoryservice.domain.model.dto.out.ErrorResponseDto.FieldErrorResponseDto("title", "must not be blank"))
                 )
@@ -38,7 +37,7 @@ public final class GlobalExceptionHandlerTestCases {
                 new MissingRequestHeaderException("Idempotency-Key", null),
                 new ErrorResponseDto(
                         400,
-                        HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                        "Bad request",
                         "Missing required header: Idempotency-Key",
                         List.of()
                 )
@@ -49,13 +48,21 @@ public final class GlobalExceptionHandlerTestCases {
         return Stream.of(
                 Arguments.of(
                         "Категория отсутствует",
-                        new InvalidEventReferenceException(HttpStatus.UNPROCESSABLE_CONTENT.getReasonPhrase(), "Category not found"),
-                        new ErrorResponseDto(422, HttpStatus.UNPROCESSABLE_CONTENT.getReasonPhrase(), "Category not found", List.of())
+                        new InvalidEventReferenceException(
+                                "api.event.categories.not_found.message.one",
+                                "api.event.categories.not_found.detail.one",
+                                "category-1"
+                        ),
+                        new ErrorResponseDto(422, "Category not found", "Category with id category-1 was not found", List.of())
                 ),
                 Arguments.of(
                         "Изображение принадлежит другому организатору",
-                        new InvalidEventReferenceException(HttpStatus.UNPROCESSABLE_CONTENT.getReasonPhrase(), "Image is not owned by organizer"),
-                        new ErrorResponseDto(422, HttpStatus.UNPROCESSABLE_CONTENT.getReasonPhrase(), "Image is not owned by organizer", List.of())
+                        new InvalidEventReferenceException(
+                                "api.event.images.not_found.message.one",
+                                "api.event.images.not_found.detail.one",
+                                "image-1"
+                        ),
+                        new ErrorResponseDto(422, "Image not found", "Image with id image-1 was not found", List.of())
                 )
         );
     }
@@ -64,13 +71,20 @@ public final class GlobalExceptionHandlerTestCases {
         return Stream.of(
                 Arguments.of(
                         "Пустой ключ",
-                        new InvalidEventRequestException(HttpStatus.BAD_REQUEST.getReasonPhrase(), "Idempotency-Key must not be blank"),
-                        new ErrorResponseDto(400, HttpStatus.BAD_REQUEST.getReasonPhrase(), "Idempotency-Key must not be blank", List.of())
+                        new InvalidEventRequestException(
+                                "api.error.bad_request.message",
+                                "api.error.header_missing.detail",
+                                "Idempotency-Key"
+                        ),
+                        new ErrorResponseDto(400, "Bad request", "Missing required header: Idempotency-Key", List.of())
                 ),
                 Arguments.of(
                         "Возрастное ограничение не поддерживается",
-                        new InvalidEventRequestException(HttpStatus.BAD_REQUEST.getReasonPhrase(), "Unsupported age restriction"),
-                        new ErrorResponseDto(400, HttpStatus.BAD_REQUEST.getReasonPhrase(), "Unsupported age restriction", List.of())
+                        new InvalidEventRequestException(
+                                "api.event.age_restriction.invalid.message",
+                                "api.event.age_restriction.invalid.detail"
+                        ),
+                        new ErrorResponseDto(400, "Invalid age restriction", "Supported values are 0, 6, 12, 16, and 18", List.of())
                 )
         );
     }
@@ -78,8 +92,12 @@ public final class GlobalExceptionHandlerTestCases {
     public static Stream<Arguments> idempotencyConflict_whenKeyHasDifferentRequest_shouldReturnConflictTestCases() {
         return Stream.of(Arguments.of(
                 "Повторное использование ключа с другим запросом",
-                new IdempotencyConflictException(HttpStatus.CONFLICT.getReasonPhrase(), "Idempotency-Key conflict"),
-                new ErrorResponseDto(409, HttpStatus.CONFLICT.getReasonPhrase(), "Idempotency-Key conflict", List.of())
+                new IdempotencyConflictException(
+                        "api.event.idempotency_conflict.message",
+                        "api.event.idempotency_conflict.detail",
+                        "key-1"
+                ),
+                new ErrorResponseDto(409, "Idempotency key conflict", "An event with idempotency key key-1 has already been created", List.of())
         ));
     }
 }

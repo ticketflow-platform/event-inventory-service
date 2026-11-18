@@ -31,7 +31,7 @@ public final class EventControllerTestCases {
                         "create-invalid-category",
                         422,
                         0,
-                        "Категория с id: 00000000-0000-0000-0000-000000000099 не найдена"
+                        "Категория с id 00000000-0000-0000-0000-000000000099 не найдена"
                 )
         );
     }

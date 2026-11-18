@@ -24,7 +24,7 @@ public final class HashServiceTestCases {
                                 )),
                                 0
                         ),
-                        "3908481aa202120104f3e5d0a3f4f4f45744416c66a94abe8cf269a42c83ab07"
+                        "b79fc2c2655b425e47b2a61761ac201dccf453e826c18cdb3875b98904261805"
                 ),
                 Arguments.of(
                         "Заполнены категории и изображения",
@@ -38,7 +38,7 @@ public final class HashServiceTestCases {
                                 )),
                                 18
                         ),
-                        "c493ede7f5a2a2ccd2bc0f09d7b853979ee871a99588f5d37330f8b7534aaa72"
+                        "8b3543213f766c3945c459cdd9c9c2ff49f53fc277e15b7b1df5ef52a34d1c6d"
                 )
         );
     }

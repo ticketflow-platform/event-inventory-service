@@ -67,7 +67,7 @@ class EventServiceTest {
 
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource("ru.ticketflowplatform.eventinventoryservice.scenario.cases.EventServiceTestCases#create_whenStoredKeyMatchesRequest_shouldReturnStoredResponseTestCases")
-    @DisplayName("╨Т╨╛╨╖╨▓╤А╨░╤Й╨░╨╡╤В ╨╕╤Б╤Е╨╛╨┤╨╜╤Л╨╣ ╨╛╤В╨▓╨╡╤В ╨┐╤А╨╕ ╨┐╨╛╨▓╤В╨╛╤А╨╡ ╨╖╨░╨┐╤А╨╛╤Б╨░ ╨┐╨╛ ╤Б╤Ж╨╡╨╜╨░╤А╨╕╤П╨╝")
+    @DisplayName("Возвращает исходный ответ при повторе запроса по сценариям")
     void create_whenStoredKeyMatchesRequest_shouldReturnStoredResponseTest(
             String scenario,
             CreateEventRequestDto request,
@@ -86,7 +86,7 @@ class EventServiceTest {
 
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource("ru.ticketflowplatform.eventinventoryservice.scenario.cases.EventServiceTestCases#create_whenStoredKeyHasDifferentFingerprint_shouldThrowConflictTestCases")
-    @DisplayName("╨Ю╤В╨║╨╗╨╛╨╜╤П╨╡╤В ╨┐╨╛╨▓╤В╨╛╤А╨╜╨╛╨╡ ╨╕╤Б╨┐╨╛╨╗╤М╨╖╨╛╨▓╨░╨╜╨╕╨╡ ╨║╨╗╤О╤З╨░ ╤Б ╨┤╤А╤Г╨│╨╕╨╝ ╤Б╨╛╨┤╨╡╤А╨╢╨╕╨╝╤Л╨╝ ╨┐╨╛ ╤Б╤Ж╨╡╨╜╨░╤А╨╕╤П╨╝")
+    @DisplayName("Отклоняет повторное использование ключа с другим содержимым по сценариям")
     void create_whenStoredKeyHasDifferentFingerprint_shouldThrowConflictTest(
             String scenario,
             CreateEventRequestDto request,
@@ -105,7 +105,7 @@ class EventServiceTest {
 
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource("ru.ticketflowplatform.eventinventoryservice.scenario.cases.EventServiceTestCases#create_whenAgeRestrictionIsUnsupported_shouldRejectRequestTestCases")
-    @DisplayName("╨Ю╤В╨║╨╗╨╛╨╜╤П╨╡╤В ╨╜╨╡╨┐╨╛╨┤╨┤╨╡╤А╨╢╨╕╨▓╨░╨╡╨╝╨╛╨╡ ╨▓╨╛╨╖╤А╨░╤Б╤В╨╜╨╛╨╡ ╨╛╨│╤А╨░╨╜╨╕╤З╨╡╨╜╨╕╨╡ ╨┐╨╛ ╤Б╤Ж╨╡╨╜╨░╤А╨╕╤П╨╝")
+    @DisplayName("Отклоняет неподдерживаемое возрастное ограничение по сценариям")
     void create_whenAgeRestrictionIsUnsupported_shouldRejectRequestTest(
             String scenario,
             CreateEventRequestDto request
@@ -123,7 +123,7 @@ class EventServiceTest {
 
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource("ru.ticketflowplatform.eventinventoryservice.scenario.cases.EventServiceTestCases#create_whenCategoryIdsContainDuplicates_shouldRejectRequestTestCases")
-    @DisplayName("╨Ю╤В╨║╨╗╨╛╨╜╤П╨╡╤В ╨┐╨╛╨▓╤В╨╛╤А╤П╤О╤Й╨╕╨╡╤Б╤П ╨║╨░╤В╨╡╨│╨╛╤А╨╕╨╕ ╨┐╨╛ ╤Б╤Ж╨╡╨╜╨░╤А╨╕╤П╨╝")
+    @DisplayName("Отклоняет повторяющиеся категории по сценариям")
     void create_whenCategoryIdsContainDuplicates_shouldRejectRequestTest(
             String scenario,
             CreateEventRequestDto request
@@ -141,7 +141,7 @@ class EventServiceTest {
 
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource("ru.ticketflowplatform.eventinventoryservice.scenario.cases.EventServiceTestCases#create_whenImageIdsContainDuplicates_shouldRejectRequestTestCases")
-    @DisplayName("╨Ю╤В╨║╨╗╨╛╨╜╤П╨╡╤В ╨┐╨╛╨▓╤В╨╛╤А╤П╤О╤Й╨╕╨╡╤Б╤П ╨╕╨╖╨╛╨▒╤А╨░╨╢╨╡╨╜╨╕╤П ╨┐╨╛ ╤Б╤Ж╨╡╨╜╨░╤А╨╕╤П╨╝")
+    @DisplayName("Отклоняет повторяющиеся изображения по сценариям")
     void create_whenImageIdsContainDuplicates_shouldRejectRequestTest(
             String scenario,
             CreateEventRequestDto request
@@ -159,7 +159,7 @@ class EventServiceTest {
 
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource("ru.ticketflowplatform.eventinventoryservice.scenario.cases.EventServiceTestCases#create_whenCategoryIsMissingOrInactive_shouldRejectRequestTestCases")
-    @DisplayName("╨Ю╤В╨║╨╗╨╛╨╜╤П╨╡╤В ╨╛╤В╤Б╤Г╤В╤Б╤В╨▓╤Г╤О╤Й╤Г╤О ╨╕╨╗╨╕ ╨╜╨╡╨░╨║╤В╨╕╨▓╨╜╤Г╤О ╨║╨░╤В╨╡╨│╨╛╤А╨╕╤О ╨┐╨╛ ╤Б╤Ж╨╡╨╜╨░╤А╨╕╤П╨╝")
+    @DisplayName("Отклоняет отсутствующую или неактивную категорию по сценариям")
     void create_whenCategoryIsMissingOrInactive_shouldRejectRequestTest(
             String scenario,
             CreateEventRequestDto request,
@@ -182,7 +182,7 @@ class EventServiceTest {
 
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource("ru.ticketflowplatform.eventinventoryservice.scenario.cases.EventServiceTestCases#create_whenImageIsMissingOrForeign_shouldRejectRequestTestCases")
-    @DisplayName("╨Ю╤В╨║╨╗╨╛╨╜╤П╨╡╤В ╨╛╤В╤Б╤Г╤В╤Б╤В╨▓╤Г╤О╤Й╨╡╨╡ ╨╕╨╗╨╕ ╤З╤Г╨╢╨╛╨╡ ╨╕╨╖╨╛╨▒╤А╨░╨╢╨╡╨╜╨╕╨╡ ╨┐╨╛ ╤Б╤Ж╨╡╨╜╨░╤А╨╕╤П╨╝")
+    @DisplayName("Отклоняет отсутствующее или чужое изображение по сценариям")
     void create_whenImageIsMissingOrForeign_shouldRejectRequestTest(
             String scenario,
             CreateEventRequestDto request,
@@ -214,7 +214,7 @@ class EventServiceTest {
 
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource("ru.ticketflowplatform.eventinventoryservice.scenario.cases.EventServiceTestCases#create_whenRequiredReferencesAreMissing_shouldRejectRequestTestCases")
-    @DisplayName("╨б╨╛╨╖╨┤╨░╤С╤В ╤З╨╡╤А╨╜╨╛╨▓╨╕╨║ ╤В╨╛╨╗╤М╨║╨╛ ╤Б ╨╜╨░╨╖╨▓╨░╨╜╨╕╨╡╨╝")
+    @DisplayName("Создает черновик только с названием")
     void create_whenOnlyTitleIsProvided_shouldCreateDraft(String scenario, CreateEventRequestDto request) {
         Mockito.when(hashService.hash(request)).thenReturn("fingerprint");
         Mockito.when(idempotencyKeyRepository.findByOrganizerIdAndKey("organizer-1", "request-1"))
@@ -234,7 +234,7 @@ class EventServiceTest {
 
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource("ru.ticketflowplatform.eventinventoryservice.scenario.cases.EventServiceTestCases#create_whenReferencesAreValid_shouldPersistAllLinksInOneTransactionTestCases")
-    @DisplayName("╨б╨╛╨╖╨┤╨░╤С╤В ╤Б╨▓╤П╨╖╨╕ ╨║╨░╤В╨╡╨│╨╛╤А╨╕╨╣ ╨╕ ╨╕╨╖╨╛╨▒╤А╨░╨╢╨╡╨╜╨╕╨╣ ╨▓ ╨╛╨┤╨╜╨╛╨╣ ╤В╤А╨░╨╜╨╖╨░╨║╤Ж╨╕╨╕ ╨┐╨╛ ╤Б╤Ж╨╡╨╜╨░╤А╨╕╤П╨╝")
+    @DisplayName("Создает связи категорий и изображений в одной транзакции по сценариям")
     void create_whenReferencesAreValid_shouldPersistAllLinksInOneTransactionTest(
             String scenario,
             CreateEventRequestDto request,

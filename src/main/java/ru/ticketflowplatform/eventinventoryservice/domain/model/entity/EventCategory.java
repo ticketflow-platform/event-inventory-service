@@ -52,5 +52,3 @@ public class EventCategory {
         private UUID categoryId;
     }
 }
-
-

@@ -14,11 +14,11 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.CategoryStatus;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.CategoryStatus;
 
 @Entity
 @Table(schema = "events", name = "categories")

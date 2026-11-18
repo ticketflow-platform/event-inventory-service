@@ -5,7 +5,7 @@ import org.springframework.http.HttpStatus;
 
 public class IdempotencyConflictException extends ErrorResponseException {
 
-    public IdempotencyConflictException(String message, String detail) {
-        super(HttpStatus.CONFLICT.value(), message, detail, List.of());
+    public IdempotencyConflictException(String messageCode, String detailCode, Object... arguments) {
+        super(HttpStatus.CONFLICT.value(), messageCode, detailCode, List.of(), arguments);
     }
 }

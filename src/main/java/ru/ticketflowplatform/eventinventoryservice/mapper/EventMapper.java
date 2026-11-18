@@ -1,10 +1,10 @@
 package ru.ticketflowplatform.eventinventoryservice.mapper;
 
 import java.time.Instant;
+import org.mapstruct.InjectionStrategy;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingConstants.ComponentModel;
-import org.mapstruct.InjectionStrategy;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.dto.in.CreateEventRequestDto;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.dto.out.CreateEventResponseDto;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.Event;
@@ -12,8 +12,7 @@ import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.Event;
 @Mapper(
         componentModel = ComponentModel.SPRING,
         injectionStrategy = InjectionStrategy.CONSTRUCTOR,
-        uses = {EventCategoryMapper.class, EventImageMapper.class}
-)
+        uses = { EventCategoryMapper.class, EventImageMapper.class })
 public interface EventMapper {
 
     @Mapping(target = "id", ignore = true)
