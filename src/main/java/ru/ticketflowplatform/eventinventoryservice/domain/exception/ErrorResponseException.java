@@ -14,21 +14,21 @@ public class ErrorResponseException extends RuntimeException {
     private final List<FieldErrorResponseDto> errors;
 
     public ErrorResponseException(
-            int status,
-            String messageCode,
-            String detailCode,
-            List<FieldErrorResponseDto> errors,
-            Object... arguments) {
+        int status,
+        String messageCode,
+        String detailCode,
+        List<FieldErrorResponseDto> errors,
+        Object... arguments) {
         this(status, messageCode, detailCode, null, errors, arguments);
     }
 
     protected ErrorResponseException(
-            int status,
-            String messageCode,
-            String detailCode,
-            Throwable cause,
-            List<FieldErrorResponseDto> errors,
-            Object... arguments) {
+        int status,
+        String messageCode,
+        String detailCode,
+        Throwable cause,
+        List<FieldErrorResponseDto> errors,
+        Object... arguments) {
         super(detailCode, cause);
         this.status = status;
         this.messageCode = messageCode;

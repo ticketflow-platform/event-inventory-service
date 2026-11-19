@@ -2,14 +2,15 @@ package ru.ticketflowplatform.eventinventoryservice.config;
 
 import static ru.ticketflowplatform.eventinventoryservice.domain.model.consts.I18N.MESSAGE_PREFIX;
 
+import java.util.Locale;
+
+import org.springframework.context.MessageSource;
+import org.springframework.stereotype.Component;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.media.Schema;
-import java.util.Locale;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.MessageSource;
-import org.springframework.stereotype.Component;
 
 @Component
 @RequiredArgsConstructor
@@ -20,8 +21,8 @@ public class OpenApiLocalizer {
     public void localize(OpenAPI openApi, Locale locale) {
         openApi.setInfo(
             new Info().title(toMessage("swagger.info.title", locale))
-                    .description(toMessage("swagger.info.description", locale))
-                    .version("1.0.0")
+                .description(toMessage("swagger.info.description", locale))
+                .version("1.0.0")
         );
 
         if (openApi.getTags() != null) {
@@ -33,7 +34,7 @@ public class OpenApiLocalizer {
 
         if (openApi.getPaths() != null) {
             openApi.getPaths().values().stream().flatMap(path -> path.readOperations().stream())
-                    .forEach(operation -> localize(operation, locale));
+                .forEach(operation -> localize(operation, locale));
         }
 
         if (openApi.getComponents() != null && openApi.getComponents().getSchemas() != null) {

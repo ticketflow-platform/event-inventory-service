@@ -66,9 +66,9 @@ public class EventService {
             IdempotencyKey key = storedKey.orElseThrow();
             if (!key.getRequestHash().equals(requestHash)) {
                 throw new IdempotencyConflictException(
-                        "api.event.idempotency_conflict.message",
-                        "api.event.idempotency_conflict.detail",
-                        key.getKey()
+                    "api.event.idempotency_conflict.message",
+                    "api.event.idempotency_conflict.detail",
+                    key.getKey()
                 );
             }
 
@@ -118,9 +118,9 @@ public class EventService {
         } catch (DataIntegrityViolationException dataIntegrityViolationException) {
             if (isIdempotencyKeyConflict(dataIntegrityViolationException)) {
                 throw new IdempotencyConflictException(
-                        "api.event.idempotency_conflict.message",
-                        "api.event.idempotency_conflict.detail",
-                        idempotencyKey
+                    "api.event.idempotency_conflict.message",
+                    "api.event.idempotency_conflict.detail",
+                    idempotencyKey
                 );
             }
             throw dataIntegrityViolationException;
@@ -144,19 +144,19 @@ public class EventService {
         List<UUID> missingIds = ids.stream().filter(id -> !foundIds.contains(id)).distinct().toList();
         if (!missingIds.isEmpty()) {
             throw new InvalidEventReferenceException(
-                    selectMessageCode(
-                        missingIds,
-                        "api.event.categories.not_found.message.one",
-                        "api.event.categories.not_found.message.many"
-                    ),
+                selectMessageCode(
+                    missingIds,
+                    "api.event.categories.not_found.message.one",
+                    "api.event.categories.not_found.message.many"
+                ),
 
-                    selectMessageCode(
-                        missingIds,
-                        "api.event.categories.not_found.detail.one",
-                        "api.event.categories.not_found.detail.many"
-                    ),
+                selectMessageCode(
+                    missingIds,
+                    "api.event.categories.not_found.detail.one",
+                    "api.event.categories.not_found.detail.many"
+                ),
 
-                    formatIds(missingIds)
+                formatIds(missingIds)
             );
         }
 
@@ -169,9 +169,9 @@ public class EventService {
         List<UUID> missingIds = ids.stream().filter(id -> !foundIds.contains(id)).distinct().toList();
         if (!missingIds.isEmpty()) {
             throw new InvalidEventReferenceException(
-                    selectMessageCode(missingIds, "api.event.images.not_found.message.one", "api.event.images.not_found.message.many"),
-                    selectMessageCode(missingIds, "api.event.images.not_found.detail.one", "api.event.images.not_found.detail.many"),
-                    formatIds(missingIds)
+                selectMessageCode(missingIds, "api.event.images.not_found.message.one", "api.event.images.not_found.message.many"),
+                selectMessageCode(missingIds, "api.event.images.not_found.detail.one", "api.event.images.not_found.detail.many"),
+                formatIds(missingIds)
             );
         }
 
@@ -191,20 +191,20 @@ public class EventService {
     }
 
     private List<EventImage> prepareEventImages(
-            List<ImageRequestDto> imageRequests,
-            Event savedEvent,
-            Map<UUID, Image> imagesById,
-            Instant now) {
+        List<ImageRequestDto> imageRequests,
+        Event savedEvent,
+        Map<UUID, Image> imagesById,
+        Instant now) {
         return imageRequests.stream()
-                .map(
-                    imageRequest -> eventImageMapper.toEntity(savedEvent, imagesById.get(imageRequest.id()), imageRequest.type(), now)
-                ).toList();
+            .map(
+                imageRequest -> eventImageMapper.toEntity(savedEvent, imagesById.get(imageRequest.id()), imageRequest.type(), now)
+            ).toList();
     }
 
     private boolean isIdempotencyKeyConflict(Throwable exception) {
         for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
             if (cause instanceof ConstraintViolationException violation
-                    && IDEMPOTENCY_UNIQUE_CONSTRAINT.equals(violation.getConstraintName())) {
+                && IDEMPOTENCY_UNIQUE_CONSTRAINT.equals(violation.getConstraintName())) {
                 return true;
             }
         }

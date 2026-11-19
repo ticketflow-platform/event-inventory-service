@@ -36,6 +36,6 @@ public class OpenApiLocaleConfig {
 
     private GroupedOpenApi localizedGroup(String name, Locale locale, OpenApiLocalizer localizer) {
         return GroupedOpenApi.builder().group(name).pathsToMatch(openApiPath)
-                .addOpenApiCustomizer(openApi -> localizer.localize(openApi, locale)).build();
+            .addOpenApiCustomizer(openApi -> localizer.localize(openApi, locale)).build();
     }
 }
