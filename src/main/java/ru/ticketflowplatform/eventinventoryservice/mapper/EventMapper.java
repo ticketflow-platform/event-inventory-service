@@ -1,6 +1,7 @@
 package ru.ticketflowplatform.eventinventoryservice.mapper;
 
 import java.time.Instant;
+import java.util.List;
 import org.mapstruct.InjectionStrategy;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -8,11 +9,12 @@ import org.mapstruct.MappingConstants.ComponentModel;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.dto.in.CreateEventRequestDto;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.dto.out.CreateEventResponseDto;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.Event;
+import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.EventImage;
 
 @Mapper(
-        componentModel = ComponentModel.SPRING,
-        injectionStrategy = InjectionStrategy.CONSTRUCTOR,
-        uses = { EventCategoryMapper.class, EventImageMapper.class })
+    componentModel = ComponentModel.SPRING,
+    injectionStrategy = InjectionStrategy.CONSTRUCTOR,
+    uses = { EventCategoryMapper.class, EventImageMapper.class })
 public interface EventMapper {
 
     @Mapping(target = "id", ignore = true)
@@ -30,7 +32,7 @@ public interface EventMapper {
     @Mapping(target = "completedAt", ignore = true)
     Event toEntity(CreateEventRequestDto request, String organizerId, Integer ageRestriction, Instant now);
 
-    @Mapping(target = "categoryIds", source = "eventCategories")
+    @Mapping(target = "categoryIds", source = "event.eventCategories")
     @Mapping(target = "images", source = "eventImages")
-    CreateEventResponseDto toResponse(Event event);
+    CreateEventResponseDto toResponse(Event event, List<EventImage> eventImages);
 }

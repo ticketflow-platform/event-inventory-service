@@ -52,7 +52,8 @@ public class SecurityConfig {
             )
             .authorizeHttpRequests(
                 auth -> auth
-                    .requestMatchers(healthPath, swaggerUiPath, swaggerUiEntryPath, openApiDocsPath).hasRole("DEVELOPER")
+                    .requestMatchers(healthPath, healthPath + "/**").permitAll()
+                    .requestMatchers(swaggerUiPath, swaggerUiEntryPath, openApiDocsPath).hasRole("DEVELOPER")
                     .anyRequest().authenticated()
             )
             .oauth2ResourceServer(

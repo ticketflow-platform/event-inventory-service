@@ -13,7 +13,10 @@ class IdempotencyKeyMapperTest {
     private final IdempotencyKeyMapper idempotencyKeyMapper = new IdempotencyKeyMapperImpl();
 
     @ParameterizedTest(name = "{index}: {0}")
-    @MethodSource("scenario.cases.java.mapper.IdempotencyKeyMapperTestCases#toEntity_whenIdempotencyDataIsProvided_thenMapKeyTestCases")
+    @MethodSource({
+        "scenario.cases.java.mapper.IdempotencyKeyMapperTestCases#toEntity_whenIdempotencyDataIsProvided_thenMapKeyTestCases",
+        "scenario.cases.java.mapper.IdempotencyKeyMapperTestCases#toEntity_whenOneInputIsProvided_thenMapAvailableValueTestCases"
+    })
     @DisplayName("Преобразует данные идемпотентности в сущность по сценариям")
     void toEntity_whenIdempotencyDataIsProvided_thenMapKeyTest(
         String scenario,
@@ -24,27 +27,6 @@ class IdempotencyKeyMapperTest {
         Instant now) {
         IdempotencyKey idempotencyKey = idempotencyKeyMapper.toEntity(organizerId, key, requestHash, event, now);
 
-        Assertions.assertThat(idempotencyKey.getId()).isNull();
-        Assertions.assertThat(idempotencyKey.getOrganizerId()).isEqualTo(organizerId);
-        Assertions.assertThat(idempotencyKey.getKey()).isEqualTo(key);
-        Assertions.assertThat(idempotencyKey.getRequestHash()).isEqualTo(requestHash);
-        Assertions.assertThat(idempotencyKey.getEvent()).isSameAs(event);
-        Assertions.assertThat(idempotencyKey.getCreatedAt()).isEqualTo(now);
-    }
-
-    @ParameterizedTest(name = "{index}: {0}")
-    @MethodSource("scenario.cases.java.mapper.IdempotencyKeyMapperTestCases#toEntity_whenOneInputIsProvided_thenMapAvailableValueTestCases")
-    @DisplayName("Преобразует частично заданные данные идемпотентности")
-    void toEntity_whenOneInputIsProvided_thenMapAvailableValueTest(
-        String scenario,
-        String organizerId,
-        String key,
-        String requestHash,
-        Event event,
-        Instant now) {
-        IdempotencyKey idempotencyKey = idempotencyKeyMapper.toEntity(organizerId, key, requestHash, event, now);
-
-        Assertions.assertThat(idempotencyKey).isNotNull();
         Assertions.assertThat(idempotencyKey.getId()).isNull();
         Assertions.assertThat(idempotencyKey.getOrganizerId()).isEqualTo(organizerId);
         Assertions.assertThat(idempotencyKey.getKey()).isEqualTo(key);

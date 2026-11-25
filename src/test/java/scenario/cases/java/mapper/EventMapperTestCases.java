@@ -70,10 +70,10 @@ public final class EventMapperTestCases {
         Instant now = Instant.parse("2026-01-02T03:04:05Z");
         CreateEventRequestDto request = new CreateEventRequestDto("Festival", "Live", null, null, null);
         return Stream.of(
-            Arguments.of("Запрос отсутствует, организатор задан", null, "organizer-1", null, null, null, null, "organizer-1", null),
-            Arguments.of("Задано только возрастное ограничение", null, null, 16, null, null, null, null, 16),
-            Arguments.of("Задано только время", null, null, null, now, null, null, null, null),
-            Arguments.of("В запросе отсутствует время", request, "organizer-2", null, null, "Festival", "Live", "organizer-2", null)
+            Arguments.of("Запрос отсутствует, организатор задан", null, "organizer-1", null, null, null, null),
+            Arguments.of("Задано только возрастное ограничение", null, null, 16, null, null, null),
+            Arguments.of("Задано только время", null, null, null, now, null, null),
+            Arguments.of("В запросе отсутствует время", request, "organizer-2", null, null, "Festival", "Live")
         );
     }
 

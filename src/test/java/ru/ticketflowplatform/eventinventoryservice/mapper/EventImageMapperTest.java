@@ -53,9 +53,9 @@ class EventImageMapperTest {
     }
 
     @ParameterizedTest(name = "{index}: {0}")
-    @MethodSource("scenario.cases.java.mapper.EventImageMapperTestCases#toResponses_whenLinksAreProvided_thenPlaceCoverFirstTestCases")
-    @DisplayName("Возвращает обложку перед изображениями галереи")
-    void toResponses_whenLinksAreProvided_thenPlaceCoverFirstTest(
+    @MethodSource("scenario.cases.java.mapper.EventImageMapperTestCases#toResponses_whenLinksAreProvided_thenPreserveOrderTestCases")
+    @DisplayName("Преобразует изображения без изменения порядка")
+    void toResponses_whenLinksAreProvided_thenPreserveOrderTest(
         String scenario,
         List<EventImage> links,
         List<EventImageResponseDto> expected) {

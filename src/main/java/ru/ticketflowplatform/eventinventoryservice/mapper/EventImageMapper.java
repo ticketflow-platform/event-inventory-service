@@ -1,7 +1,6 @@
 package ru.ticketflowplatform.eventinventoryservice.mapper;
 
 import java.time.Instant;
-import java.util.Comparator;
 import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -26,10 +25,5 @@ public interface EventImageMapper {
     @Mapping(target = "imageId", source = "image.id")
     EventImageResponseDto toResponse(EventImage eventImage);
 
-    default List<EventImageResponseDto> toResponses(List<EventImage> eventImages) {
-        return eventImages.stream()
-            .sorted(Comparator.comparing(EventImage::getType).thenComparing(eventImage -> eventImage.getImage().getId()))
-            .map(this::toResponse)
-            .toList();
-    }
+    List<EventImageResponseDto> toResponses(List<EventImage> eventImages);
 }

@@ -1,5 +1,6 @@
 package scenario.cases.java.config;
 
+import helper.SecurityConfigHelper;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -12,9 +13,11 @@ public final class SecurityConfigApiTestCases {
         return Stream.of(
             Arguments.of(
                 "Роль организатора из realm_access",
-                "http://localhost:8080/realms/ticketflow",
-                List.of("ticketflow"),
-                Map.of("roles", List.of("ORGANIZER")),
+                SecurityConfigHelper.signedToken(
+                    "http://localhost:8080/realms/ticketflow",
+                    List.of("ticketflow"),
+                    Map.of("roles", List.of("ORGANIZER"))
+                ),
                 "{\"title\":\"Security test\"}",
                 "jwt-organizer",
                 "security-test-organizer",
@@ -29,45 +32,35 @@ public final class SecurityConfigApiTestCases {
         return Stream.of(
             Arguments.of(
                 "realm_access отсутствует",
-                issuer,
-                List.of("ticketflow"),
-                null,
+                SecurityConfigHelper.signedToken(issuer, List.of("ticketflow"), null),
                 requestBody,
                 "jwt-no-realm-access",
                 new ErrorResponseDto(403, "Access denied", "You do not have permission to perform this operation", List.of())
             ),
             Arguments.of(
                 "Пользователь без ролей",
-                issuer,
-                List.of("ticketflow"),
-                Map.of(),
+                SecurityConfigHelper.signedToken(issuer, List.of("ticketflow"), Map.of()),
                 requestBody,
                 "jwt-no-role",
                 new ErrorResponseDto(403, "Access denied", "You do not have permission to perform this operation", List.of())
             ),
             Arguments.of(
                 "realm_access содержит некорректный список",
-                issuer,
-                List.of("ticketflow"),
-                Map.of("roles", "ORGANIZER"),
+                SecurityConfigHelper.signedToken(issuer, List.of("ticketflow"), Map.of("roles", "ORGANIZER")),
                 requestBody,
                 "jwt-invalid-roles",
                 new ErrorResponseDto(403, "Access denied", "You do not have permission to perform this operation", List.of())
             ),
             Arguments.of(
                 "Пустой список ролей",
-                issuer,
-                List.of("ticketflow"),
-                Map.of("roles", List.of()),
+                SecurityConfigHelper.signedToken(issuer, List.of("ticketflow"), Map.of("roles", List.of())),
                 requestBody,
                 "jwt-empty-roles",
                 new ErrorResponseDto(403, "Access denied", "You do not have permission to perform this operation", List.of())
             ),
             Arguments.of(
                 "Неверная аудитория",
-                issuer,
-                List.of("other-service"),
-                Map.of("roles", List.of("ORGANIZER")),
+                SecurityConfigHelper.signedToken(issuer, List.of("other-service"), Map.of("roles", List.of("ORGANIZER"))),
                 requestBody,
                 "jwt-invalid-audience",
                 new ErrorResponseDto(
@@ -79,9 +72,11 @@ public final class SecurityConfigApiTestCases {
             ),
             Arguments.of(
                 "Неверный издатель",
-                "https://invalid.example/issuer",
-                List.of("ticketflow"),
-                Map.of("roles", List.of("ORGANIZER")),
+                SecurityConfigHelper.signedToken(
+                    "https://invalid.example/issuer",
+                    List.of("ticketflow"),
+                    Map.of("roles", List.of("ORGANIZER"))
+                ),
                 requestBody,
                 "jwt-invalid-issuer",
                 new ErrorResponseDto(

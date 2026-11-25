@@ -7,21 +7,25 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors;
 import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import helper.BaseIntegrationTest;
+import ru.ticketflowplatform.eventinventoryservice.domain.model.dto.in.CreateEventRequestDto;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.dto.out.CreateEventResponseDto;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.dto.out.CreateEventResponseDto.EventImageResponseDto;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.dto.out.ErrorResponseDto;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.EventStatus;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.ImagePosition;
+import ru.ticketflowplatform.eventinventoryservice.service.EventService;
 
 @Sql(scripts = "/scenario/cases/sql/clear-event-data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Sql(scripts = "/scenario/cases/sql/clear-event-data.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
@@ -29,6 +33,45 @@ class EventControllerTest extends BaseIntegrationTest {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @MockitoSpyBean
+    private EventService eventService;
+
+    @ParameterizedTest(name = "{index}: {0}")
+    @MethodSource("scenario.cases.java.controller.EventControllerTestCases#create_whenServiceFails_thenReturnCompleteErrorTestCases")
+    @DisplayName("Возвращает полную HTTP-ошибку при сбое сервиса")
+    void create_whenServiceFails_thenReturnCompleteErrorTest(
+        String scenario,
+        String requestBody,
+        String idempotencyKey,
+        String language,
+        RuntimeException failure,
+        ErrorResponseDto expectedError) throws Exception {
+        Mockito.doThrow(failure).when(eventService).create(
+            Mockito.any(CreateEventRequestDto.class),
+            Mockito.eq("organizer-1"),
+            Mockito.eq(idempotencyKey)
+        );
+
+        MvcResult result = mockMvc.perform(
+            MockMvcRequestBuilders.post("/api/v1/events")
+                .with(
+                    SecurityMockMvcRequestPostProcessors.jwt()
+                        .jwt(jwt -> jwt.subject("organizer-1"))
+                        .authorities(new SimpleGrantedAuthority("ROLE_ORGANIZER"))
+                )
+                .header("Idempotency-Key", idempotencyKey)
+                .header("Accept-Language", language)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody)
+        ).andReturn();
+        ErrorResponseDto error = objectMapper.readValue(result.getResponse().getContentAsString(), ErrorResponseDto.class);
+
+        Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(expectedError.status());
+        Assertions.assertThat(error).isEqualTo(expectedError);
+        Assertions.assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM events.events", Integer.class)).isZero();
+        Assertions.assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM events.idempotency_keys", Integer.class)).isZero();
+    }
 
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource("scenario.cases.java.controller.EventControllerTestCases#openApi_whenLocaleIsRequested_thenDocumentSchemaAndLocalizedSpecTestCases")
@@ -61,6 +104,21 @@ class EventControllerTest extends BaseIntegrationTest {
         Assertions.assertThat(openApi.at("/paths/~1api~1v1~1events/post/summary").asString()).isEqualTo(expectedOperationSummary);
         Assertions.assertThat(openApi.at("/paths/~1api~1v1~1events/post/responses/500/description").asString())
             .isEqualTo(expectedResponseDescription);
+    }
+
+    @ParameterizedTest(name = "{index}: {0}")
+    @MethodSource("scenario.cases.java.controller.EventControllerTestCases#health_whenRequestIsUnauthenticated_thenAllowAccessTestCases")
+    @DisplayName("Не требует аутентификации для health")
+    void health_whenRequestIsUnauthenticated_thenAllowAccessTest(
+        String scenario,
+        String path,
+        int expectedStatus,
+        String expectedBody) throws Exception {
+        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get(path)).andReturn();
+
+        Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(expectedStatus);
+        Assertions.assertThat(objectMapper.readTree(result.getResponse().getContentAsString()))
+            .isEqualTo(objectMapper.readTree(expectedBody));
     }
 
     @ParameterizedTest(name = "{index}: {0}")
@@ -145,31 +203,41 @@ class EventControllerTest extends BaseIntegrationTest {
         Assertions.assertThat(response.publishedAt()).isNull();
         Assertions.assertThat(response.cancelledAt()).isNull();
         Assertions.assertThat(response.completedAt()).isNull();
-        Assertions.assertThat(jdbcTemplate.queryForObject(
-            "SELECT organizer_id FROM events.events WHERE id = ?",
-            String.class,
-            response.id()
-        )).isEqualTo("organizer-1");
-        Assertions.assertThat(jdbcTemplate.queryForObject(
-            "SELECT status FROM events.events WHERE id = ?",
-            String.class,
-            response.id()
-        )).isEqualTo("DRAFT");
-        Assertions.assertThat(jdbcTemplate.queryForList(
-            "SELECT category_id FROM events.events_categories WHERE event_id = ? ORDER BY category_id",
-            UUID.class,
-            response.id()
-        )).containsExactlyElementsOf(expectedCategoryIds);
-        Assertions.assertThat(jdbcTemplate.queryForList(
-            "SELECT image_id FROM events.events_images WHERE event_id = ? ORDER BY type, image_id",
-            UUID.class,
-            response.id()
-        )).containsExactlyElementsOf(expectedImageIds);
-        Assertions.assertThat(jdbcTemplate.queryForList(
-            "SELECT type FROM events.events_images WHERE event_id = ? ORDER BY type, image_id",
-            String.class,
-            response.id()
-        )).containsExactlyElementsOf(expectedImagePositions.stream().map(Enum::name).toList());
+        Assertions.assertThat(
+            jdbcTemplate.queryForObject(
+                "SELECT organizer_id FROM events.events WHERE id = ?",
+                String.class,
+                response.id()
+            )
+        ).isEqualTo("organizer-1");
+        Assertions.assertThat(
+            jdbcTemplate.queryForObject(
+                "SELECT status FROM events.events WHERE id = ?",
+                String.class,
+                response.id()
+            )
+        ).isEqualTo("DRAFT");
+        Assertions.assertThat(
+            jdbcTemplate.queryForList(
+                "SELECT category_id FROM events.events_categories WHERE event_id = ? ORDER BY category_id",
+                UUID.class,
+                response.id()
+            )
+        ).containsExactlyElementsOf(expectedCategoryIds);
+        Assertions.assertThat(
+            jdbcTemplate.queryForList(
+                "SELECT image_id FROM events.events_images WHERE event_id = ? ORDER BY type, image_id",
+                UUID.class,
+                response.id()
+            )
+        ).containsExactlyElementsOf(expectedImageIds);
+        Assertions.assertThat(
+            jdbcTemplate.queryForList(
+                "SELECT type FROM events.events_images WHERE event_id = ? ORDER BY type, image_id",
+                String.class,
+                response.id()
+            )
+        ).containsExactlyElementsOf(expectedImagePositions.stream().map(Enum::name).toList());
         Assertions.assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM events.events", Integer.class)).isOne();
         Assertions.assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM events.idempotency_keys", Integer.class)).isOne();
     }
@@ -556,10 +624,12 @@ class EventControllerTest extends BaseIntegrationTest {
         Assertions.assertThat(response.categoryIds()).containsExactlyInAnyOrderElementsOf(expectedCategoryIds);
         Assertions.assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM events.events_categories", Integer.class))
             .isEqualTo(expectedCategoryIds.size());
-        Assertions.assertThat(jdbcTemplate.queryForList(
-            "SELECT category_id FROM events.events_categories ORDER BY category_id",
-            UUID.class
-        )).containsExactlyElementsOf(expectedCategoryIds);
+        Assertions.assertThat(
+            jdbcTemplate.queryForList(
+                "SELECT category_id FROM events.events_categories ORDER BY category_id",
+                UUID.class
+            )
+        ).containsExactlyElementsOf(expectedCategoryIds);
         Assertions.assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM events.events_images", Integer.class)).isOne();
     }
 }

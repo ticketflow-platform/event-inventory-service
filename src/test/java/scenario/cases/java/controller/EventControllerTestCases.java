@@ -1,16 +1,51 @@
 package scenario.cases.java.controller;
 
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.provider.Arguments;
+import ru.ticketflowplatform.eventinventoryservice.domain.exception.EventNotFoundException;
+import ru.ticketflowplatform.eventinventoryservice.domain.exception.HashGenerationException;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.dto.out.ErrorResponseDto;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.dto.out.ErrorResponseDto.FieldErrorResponseDto;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.ImagePosition;
 
 public final class EventControllerTestCases {
+
+    public static Stream<Arguments> create_whenServiceFails_thenReturnCompleteErrorTestCases() {
+        UUID eventId = UUID.fromString("00000000-0000-0000-0000-000000000001");
+        return Stream.of(
+            Arguments.of(
+                "Событие из ключа отсутствует",
+                "{\"title\":\"Festival\"}",
+                "missing-event",
+                "en",
+                new EventNotFoundException("api.event.not_found.message", "api.event.not_found.detail", eventId, "missing-event"),
+                new ErrorResponseDto(
+                    404,
+                    "Event not found",
+                    "Event with id " + eventId + " and key missing-event was not found",
+                    List.of()
+                )
+            ),
+            Arguments.of(
+                "Не удалось сформировать отпечаток запроса",
+                "{\"title\":\"Festival\"}",
+                "hash-failure",
+                "ru",
+                new HashGenerationException(new NoSuchAlgorithmException("SHA-256")),
+                new ErrorResponseDto(
+                    500,
+                    "Ошибка обработки запроса",
+                    "Не удалось сформировать контрольную сумму запроса",
+                    List.of()
+                )
+            )
+        );
+    }
 
     public static Stream<Arguments> create_whenOrganizerSubmitsValidDraft_thenReturnCompleteResponseTestCases() {
         return Stream.of(
@@ -154,9 +189,21 @@ public final class EventControllerTestCases {
         );
     }
 
+    public static Stream<Arguments> health_whenRequestIsUnauthenticated_thenAllowAccessTestCases() {
+        return Stream.of(
+            Arguments.of(
+                "Health доступен без токена",
+                "/actuator/health",
+                200,
+                "{\"status\":\"UP\",\"groups\":[\"liveness\",\"readiness\"]}"
+            ),
+            Arguments.of("Liveness доступен без токена", "/actuator/health/liveness", 200, "{\"status\":\"UP\"}"),
+            Arguments.of("Readiness доступен без токена", "/actuator/health/readiness", 200, "{\"status\":\"UP\"}")
+        );
+    }
+
     public static Stream<Arguments> developerEndpoints_whenPathIsRequested_thenRequireDeveloperRoleTestCases() {
         return Stream.of(
-            Arguments.of("Health", "/actuator/health", 401, 403),
             Arguments.of("Swagger UI entry", "/swagger-ui.html", 401, 403),
             Arguments.of("Swagger UI", "/swagger-ui/index.html", 401, 403),
             Arguments.of("OpenAPI", "/v3/api-docs/ru", 401, 403)

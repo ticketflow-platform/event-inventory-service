@@ -3,6 +3,7 @@ package ru.ticketflowplatform.eventinventoryservice.service;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -81,9 +82,10 @@ public class EventService {
             }
 
             UUID eventId = key.getEvent().getId();
-            return eventRepository.findById(eventId).map(eventMapper::toResponse).orElseThrow(
-                () -> new EventNotFoundException("api.event.not_found.message", "api.event.not_found.detail", eventId, key.getKey())
-            );
+            return eventRepository.findById(eventId).map(this::toResponse)
+                .orElseThrow(
+                    () -> new EventNotFoundException("api.event.not_found.message", "api.event.not_found.detail", eventId, key.getKey())
+                );
         }
 
         Integer ageRestriction = request.ageRestriction();
@@ -147,7 +149,14 @@ public class EventService {
             throw dataIntegrityViolationException;
         }
 
-        return eventMapper.toResponse(savedEvent);
+        return toResponse(savedEvent);
+    }
+
+    private CreateEventResponseDto toResponse(Event event) {
+        List<EventImage> images = event.getEventImages().stream()
+            .sorted(Comparator.comparing(EventImage::getType).thenComparing(eventImage -> eventImage.getImage().getId()))
+            .toList();
+        return eventMapper.toResponse(event, images);
     }
 
     private void ensureUnique(List<UUID> ids, String messageCode, String detailCode) {

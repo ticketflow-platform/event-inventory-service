@@ -16,6 +16,7 @@ import ru.ticketflowplatform.eventinventoryservice.domain.model.dto.in.CreateEve
 import ru.ticketflowplatform.eventinventoryservice.domain.model.dto.out.CreateEventResponseDto;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.Category;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.Event;
+import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.EventImage;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.IdempotencyKey;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.Image;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.EventStatus;
@@ -23,6 +24,73 @@ import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.Cat
 import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.ImagePosition;
 
 public final class EventServiceTestCases {
+
+    public static Stream<Arguments> create_whenStoredImagesAreUnordered_thenReturnOrderedResponseTestCases() {
+        Instant now = Instant.parse("2026-01-02T03:04:05Z");
+        UUID eventId = new UUID(0, 1);
+        Image cover = new Image();
+        cover.setId(new UUID(0, 2));
+        Image gallery = new Image();
+        gallery.setId(new UUID(0, 3));
+        Image otherGallery = new Image();
+        otherGallery.setId(new UUID(0, 4));
+        Event event = new Event();
+        event.setId(eventId);
+        event.setOrganizerId("organizer-1");
+        event.setTitle("Concert");
+        event.setStatus(EventStatus.DRAFT);
+        event.setCreatedAt(now);
+        event.setUpdatedAt(now);
+        event.setEventImages(
+            new ArrayList<>(
+                List.of(
+                    new EventImage(
+                        new EventImage.EventImageId(eventId, otherGallery.getId()),
+                        ImagePosition.GALLERY,
+                        now,
+                        event,
+                        otherGallery
+                    ),
+                    new EventImage(new EventImage.EventImageId(eventId, cover.getId()), ImagePosition.COVER, now, event, cover),
+                    new EventImage(new EventImage.EventImageId(eventId, gallery.getId()), ImagePosition.GALLERY, now, event, gallery)
+                )
+            )
+        );
+        IdempotencyKey key = new IdempotencyKey();
+        key.setRequestHash("fingerprint");
+        key.setEvent(event);
+        CreateEventRequestDto request = new CreateEventRequestDto(
+            "Concert",
+            null,
+            null,
+            List.of(
+                new ImageRequestDto(otherGallery.getId(), ImagePosition.GALLERY),
+                new ImageRequestDto(cover.getId(), ImagePosition.COVER),
+                new ImageRequestDto(gallery.getId(), ImagePosition.GALLERY)
+            ),
+            null
+        );
+        CreateEventResponseDto expected = new CreateEventResponseDto(
+            eventId,
+            "organizer-1",
+            "Concert",
+            null,
+            List.of(),
+            List.of(
+                new CreateEventResponseDto.EventImageResponseDto(cover.getId(), ImagePosition.COVER, now),
+                new CreateEventResponseDto.EventImageResponseDto(gallery.getId(), ImagePosition.GALLERY, now),
+                new CreateEventResponseDto.EventImageResponseDto(otherGallery.getId(), ImagePosition.GALLERY, now)
+            ),
+            null,
+            EventStatus.DRAFT,
+            now,
+            now,
+            null,
+            null,
+            null
+        );
+        return Stream.of(Arguments.of("Обложка первая, галерея отсортирована по id", request, key, expected));
+    }
 
     public static Stream<Arguments> create_whenStoredKeyMatchesRequest_thenReturnStoredResponseTestCases() {
         UUID categoryId = new UUID(0, 2);

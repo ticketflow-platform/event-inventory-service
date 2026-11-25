@@ -28,6 +28,7 @@ import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.Category;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.Event;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.IdempotencyKey;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.Image;
+import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.CategoryStatus;
 import ru.ticketflowplatform.eventinventoryservice.domain.repository.CategoryRepository;
 import ru.ticketflowplatform.eventinventoryservice.domain.repository.EventCategoryRepository;
 import ru.ticketflowplatform.eventinventoryservice.domain.repository.EventImageRepository;
@@ -39,6 +40,7 @@ import ru.ticketflowplatform.eventinventoryservice.mapper.EventCategoryMapperImp
 import ru.ticketflowplatform.eventinventoryservice.mapper.EventImageMapper;
 import ru.ticketflowplatform.eventinventoryservice.mapper.EventImageMapperImpl;
 import ru.ticketflowplatform.eventinventoryservice.mapper.EventMapper;
+import ru.ticketflowplatform.eventinventoryservice.mapper.EventMapperImpl;
 import ru.ticketflowplatform.eventinventoryservice.mapper.IdempotencyKeyMapper;
 
 @ExtendWith(MockitoExtension.class)
@@ -56,8 +58,8 @@ class EventServiceTest {
     private EventImageRepository eventImageRepository;
     @Mock
     private IdempotencyKeyRepository idempotencyKeyRepository;
-    @Mock
-    private EventMapper eventMapper;
+    @Spy
+    private EventMapper eventMapper = new EventMapperImpl(new EventCategoryMapperImpl(), new EventImageMapperImpl());
     @Spy
     private EventCategoryMapper eventCategoryMapper = new EventCategoryMapperImpl();
     @Spy
@@ -70,6 +72,21 @@ class EventServiceTest {
     private EventService eventService;
 
     @ParameterizedTest(name = "{index}: {0}")
+    @MethodSource("scenario.cases.java.service.EventServiceTestCases#create_whenStoredImagesAreUnordered_thenReturnOrderedResponseTestCases")
+    @DisplayName("Сортирует обложку и галерею при идемпотентном повторе")
+    void create_whenStoredImagesAreUnordered_thenReturnOrderedResponseTest(
+        String scenario,
+        CreateEventRequestDto request,
+        IdempotencyKey storedKey,
+        CreateEventResponseDto expected) {
+        Mockito.when(hashService.hash(request)).thenReturn("fingerprint");
+        Mockito.when(idempotencyKeyRepository.findByOrganizerIdAndKey("organizer-1", "request-1")).thenReturn(Optional.of(storedKey));
+        Mockito.when(eventRepository.findById(storedKey.getEvent().getId())).thenReturn(Optional.of(storedKey.getEvent()));
+
+        Assertions.assertThat(eventService.create(request, "organizer-1", "request-1")).isEqualTo(expected);
+    }
+
+    @ParameterizedTest(name = "{index}: {0}")
     @MethodSource("scenario.cases.java.service.EventServiceTestCases#create_whenStoredKeyMatchesRequest_thenReturnStoredResponseTestCases")
     @DisplayName("Возвращает исходный ответ при повторе запроса по сценариям")
     void create_whenStoredKeyMatchesRequest_thenReturnStoredResponseTest(
@@ -80,7 +97,7 @@ class EventServiceTest {
         Mockito.when(hashService.hash(request)).thenReturn("fingerprint");
         Mockito.when(idempotencyKeyRepository.findByOrganizerIdAndKey("organizer-1", "request-1")).thenReturn(Optional.of(storedKey));
         Mockito.when(eventRepository.findById(storedKey.getEvent().getId())).thenReturn(Optional.of(storedKey.getEvent()));
-        Mockito.when(eventMapper.toResponse(storedKey.getEvent())).thenReturn(expected);
+        Mockito.when(eventMapper.toResponse(Mockito.eq(storedKey.getEvent()), Mockito.anyList())).thenReturn(expected);
         Assertions.assertThat(eventService.create(request, "organizer-1", "request-1")).isSameAs(expected);
     }
 
@@ -195,7 +212,7 @@ class EventServiceTest {
         Mockito.when(
             categoryRepository.findAllByIdInAndStatus(
                 request.categoryIds().stream().map(CreateEventRequestDto.CategoryRequestDto::id).toList(),
-                ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.CategoryStatus.ACTIVE
+                CategoryStatus.ACTIVE
             )
         ).thenReturn(foundCategories);
 
@@ -221,7 +238,7 @@ class EventServiceTest {
         Mockito.when(
             categoryRepository.findAllByIdInAndStatus(
                 request.categoryIds().stream().map(CreateEventRequestDto.CategoryRequestDto::id).toList(),
-                ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.CategoryStatus.ACTIVE
+                CategoryStatus.ACTIVE
             )
         ).thenReturn(categories);
         Mockito.when(
@@ -252,7 +269,7 @@ class EventServiceTest {
         Mockito.when(eventMapper.toEntity(Mockito.eq(request), Mockito.eq("organizer-1"), Mockito.isNull(), Mockito.any()))
             .thenReturn(event);
         Mockito.when(eventRepository.save(event)).thenReturn(event);
-        Mockito.when(eventMapper.toResponse(event)).thenReturn(expected);
+        Mockito.when(eventMapper.toResponse(Mockito.eq(event), Mockito.anyList())).thenReturn(expected);
         Mockito.when(
             idempotencyKeyMapper.toEntity(
                 Mockito.anyString(),
@@ -292,7 +309,7 @@ class EventServiceTest {
             )
         ).thenReturn(event);
         Mockito.when(eventRepository.save(event)).thenReturn(event);
-        Mockito.when(eventMapper.toResponse(event)).thenReturn(expected);
+        Mockito.when(eventMapper.toResponse(Mockito.eq(event), Mockito.anyList())).thenReturn(expected);
         Mockito.when(
             idempotencyKeyMapper.toEntity(
                 Mockito.eq("organizer-1"),

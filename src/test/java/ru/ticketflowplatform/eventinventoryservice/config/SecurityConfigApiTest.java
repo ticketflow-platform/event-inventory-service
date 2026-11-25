@@ -1,23 +1,8 @@
 package ru.ticketflowplatform.eventinventoryservice.config;
 
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.JWSAlgorithm;
-import com.nimbusds.jose.JWSHeader;
-import com.nimbusds.jose.crypto.RSASSASigner;
-import com.nimbusds.jose.jwk.JWKSet;
-import com.nimbusds.jose.jwk.RSAKey;
-import com.nimbusds.jose.jwk.gen.RSAKeyGenerator;
-import com.nimbusds.jwt.JWTClaimsSet;
-import com.nimbusds.jwt.SignedJWT;
 import com.sun.net.httpserver.HttpServer;
 import helper.BaseIntegrationTest;
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import helper.SecurityConfigHelper;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.DisplayName;
@@ -39,8 +24,7 @@ import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.Eve
 @Sql(scripts = "/scenario/cases/sql/clear-event-data.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
 class SecurityConfigApiTest extends BaseIntegrationTest {
 
-    private static final RSAKey SIGNING_KEY = signingKey();
-    private static final HttpServer JWKS_SERVER = startJwksServer();
+    private static final HttpServer JWKS_SERVER = SecurityConfigHelper.startJwksServer();
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
@@ -63,14 +47,11 @@ class SecurityConfigApiTest extends BaseIntegrationTest {
     @DisplayName("Преобразует realm_access.roles и создаёт черновик")
     void post_whenOrganizerJwtIsValid_thenCreateDraftTest(
         String scenario,
-        String issuer,
-        List<String> audience,
-        Map<String, Object> realmAccess,
+        String token,
         String requestBody,
         String idempotencyKey,
         String expectedOrganizerId,
         String expectedTitle) throws Exception {
-        String token = signedToken(issuer, audience, realmAccess);
         MvcResult result = mockMvc.perform(
             MockMvcRequestBuilders.post("/api/v1/events")
                 .header("Authorization", "Bearer " + token)
@@ -105,13 +86,10 @@ class SecurityConfigApiTest extends BaseIntegrationTest {
     @DisplayName("Возвращает полную ошибку для неверной роли, аудитории или издателя")
     void post_whenJwtDoesNotAuthorizeRequest_thenReturnCompleteErrorTest(
         String scenario,
-        String issuer,
-        List<String> audience,
-        Map<String, Object> realmAccess,
+        String token,
         String requestBody,
         String idempotencyKey,
         ErrorResponseDto expectedError) throws Exception {
-        String token = signedToken(issuer, audience, realmAccess);
         MvcResult result = mockMvc.perform(
             MockMvcRequestBuilders.post("/api/v1/events")
                 .header("Authorization", "Bearer " + token)
@@ -128,49 +106,4 @@ class SecurityConfigApiTest extends BaseIntegrationTest {
         Assertions.assertThat(jdbcTemplate.queryForObject("SELECT COUNT(*) FROM events.idempotency_keys", Integer.class)).isZero();
     }
 
-    private static String signedToken(String issuer, List<String> audience, Map<String, Object> realmAccess) {
-        JWTClaimsSet claims = new JWTClaimsSet.Builder()
-            .issuer(issuer)
-            .subject("security-test-organizer")
-            .audience(audience)
-            .issueTime(Date.from(Instant.now()))
-            .expirationTime(Date.from(Instant.now().plusSeconds(300)))
-            .claim("realm_access", realmAccess)
-            .build();
-        try {
-            SignedJWT jwt = new SignedJWT(
-                new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(SIGNING_KEY.getKeyID()).build(),
-                claims
-            );
-            jwt.sign(new RSASSASigner(SIGNING_KEY.toPrivateKey()));
-            return jwt.serialize();
-        } catch (JOSEException exception) {
-            throw new IllegalStateException(exception);
-        }
-    }
-
-    private static RSAKey signingKey() {
-        try {
-            return new RSAKeyGenerator(2048).keyID("security-config-test-key").generate();
-        } catch (JOSEException exception) {
-            throw new ExceptionInInitializerError(exception);
-        }
-    }
-
-    private static HttpServer startJwksServer() {
-        try {
-            HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
-            byte[] jwks = new JWKSet(SIGNING_KEY.toPublicJWK()).toString().getBytes(StandardCharsets.UTF_8);
-            server.createContext("/jwks", exchange -> {
-                exchange.getResponseHeaders().set("Content-Type", "application/json");
-                exchange.sendResponseHeaders(200, jwks.length);
-                exchange.getResponseBody().write(jwks);
-                exchange.close();
-            });
-            server.start();
-            return server;
-        } catch (IOException exception) {
-            throw new ExceptionInInitializerError(exception);
-        }
-    }
 }

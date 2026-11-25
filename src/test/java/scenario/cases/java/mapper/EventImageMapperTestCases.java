@@ -82,7 +82,7 @@ public final class EventImageMapperTestCases {
         );
     }
 
-    public static Stream<Arguments> toResponses_whenLinksAreProvided_thenPlaceCoverFirstTestCases() {
+    public static Stream<Arguments> toResponses_whenLinksAreProvided_thenPreserveOrderTestCases() {
         UUID coverId = UUID.fromString("00000000-0000-0000-0000-000000000002");
         UUID galleryId = UUID.fromString("00000000-0000-0000-0000-000000000003");
         UUID otherGalleryId = UUID.fromString("00000000-0000-0000-0000-000000000004");
@@ -107,15 +107,16 @@ public final class EventImageMapperTestCases {
         otherGalleryLink.setCreatedAt(now);
         return Stream.of(
             Arguments.of(
-                "Обложка идёт первой, галерея стабильно сортируется по id",
+                "Порядок изображений сохраняется",
                 List.of(otherGalleryLink, coverLink, galleryLink),
                 List.of(
+                    new EventImageResponseDto(otherGalleryId, ImagePosition.GALLERY, now),
                     new EventImageResponseDto(coverId, ImagePosition.COVER, now),
-                    new EventImageResponseDto(galleryId, ImagePosition.GALLERY, now),
-                    new EventImageResponseDto(otherGalleryId, ImagePosition.GALLERY, now)
+                    new EventImageResponseDto(galleryId, ImagePosition.GALLERY, now)
                 )
             ),
-            Arguments.of("Пустой список изображений", List.of(), List.of())
+            Arguments.of("Пустой список изображений", List.of(), List.of()),
+            Arguments.of("Список изображений отсутствует", null, null)
         );
     }
 }

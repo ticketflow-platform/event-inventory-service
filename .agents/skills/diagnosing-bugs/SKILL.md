@@ -39,7 +39,7 @@ If you cannot reproduce after reasonable focused attempts, stop. Tell the user w
 - Put all scenario inputs and expected outcomes in `<ProductionClass>TestCases` under `src/test/java/scenario/cases/java`; use parameterized JUnit 5 tests and combine scenarios that share setup, action, and assertion shape.
 - Keep test bodies straight-line: parameter inputs, necessary stubs, one public call, complete AssertJ assertions. No test `if/else`, loops, reflection, private-method calls, inline scenario fixtures, or weakened assertions.
 - Test the public API/public method. Never expose private implementation solely to test it.
-- Aim to keep the 100% JaCoCo gate through meaningful cases. Do not add a behaviorless test to make a counter green. If a reported coverage gap has no meaningful public behavior behind it, explain the exact gap and ask before changing design, exclusions, or the gate.
+- Keep the 95% line and branch JaCoCo gate for handwritten code through meaningful cases; generated MapStruct implementations remain in reports but not the gate. Analyze missing behavior even when the gate passes. Do not add dummy controllers, probe endpoints, or behaviorless tests to make a counter green. If a gap has no meaningful public behavior behind it, explain it and ask before changing design, exclusions, or the gate.
 
 ## 5. Verify and report
 

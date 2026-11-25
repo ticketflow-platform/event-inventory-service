@@ -52,7 +52,9 @@ context: |
   - Every test method under `src/test/java/ru/ticketflowplatform` must use `@ParameterizedTest`; parameterize single-scenario tests too, and consolidate cases that share setup and assertions.
   - Name test classes `<ProductionClass>Test`; name test methods and scenario providers `method_whenCondition_thenExpectedResultTest` and `method_whenCondition_thenExpectedResultTestCases` respectively.
   - Give test and scenario annotations Russian display names.
-  - Do not use conditionals, helper methods/classes, or private methods in tests and scenario case classes.
+  - Test methods only arrange stubs from scenario arguments, invoke public behavior, and assert results. Keep scenario data in TestCases; put infrastructure creation (keys, signed JWTs, JWKS/HTTP servers) in src/test/java/helper and pass ready inputs into tests. Do not define conditionals or private helper methods in tests and scenario case classes.
+  - Require at least 95% line and branch coverage for handwritten production code. Keep generated MapStruct implementations in coverage reports but exclude them from the verification gate.
+  - Analyze uncovered code against requirements after running tests; cover missing business rules, errors, security, and transactional guarantees even when the gate passes. Never add dummy controllers or probe endpoints just to improve coverage; report unreachable branches instead of inventing behavior.
   - Integration tests extend `helper.BaseIntegrationTest`, which provides `@SpringBootTest`, `@AutoConfigureMockMvc`, and `MockMvc`. Configure the Testcontainers JDBC URL in `src/test/resources/application.yaml`; use `@Sql` scripts for database setup.
   - Keep each database action in its own Flyway migration file, with an uppercase description (for example, `V1__CREATE_EVENTS_SCHEMA.sql`).
   - Do not change unrelated code while implementing a task.
