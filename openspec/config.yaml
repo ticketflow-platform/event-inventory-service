@@ -46,11 +46,14 @@ context: |
   - Prefer focused tests with minimal setup.
   - Every method in `src/main/java/ru/ticketflowplatform/eventinventoryservice/mapper`, `src/main/java/ru/ticketflowplatform/eventinventoryservice/service`, and `GlobalExceptionHandler` must have parameterized unit-test coverage.
   - Keep scenarios that share setup in one parameterized test; use separate parameterized tests when their mock requirements differ.
-  - Put test `Arguments.of(...)` scenarios in `src/test/java/ru/ticketflowplatform/eventinventoryservice/scenario/cases` classes named `<ProductionClass>TestCases`.
-  - Name test classes `<ProductionClass>Test`; name test methods and scenario providers `method_whenCondition_shouldExpectedResultTest` and `method_whenCondition_shouldExpectedResultTestCases` respectively.
+  - Use AssertJ for all test assertions; do not use JUnit Jupiter `Assertions`.
+  - Put test `Arguments.of(...)` scenarios and reusable fixtures, including OpenAPI model construction, in `<ProductionClass>TestCases` classes under `src/test/java/scenario/cases/java`; do not construct scenario-specific fixtures in test methods.
+  - Put test SQL scripts under `src/test/java/scenario/cases/sql` and include them as test resources; keep Flyway migrations under `src/main/resources/db/migration`.
+  - Every test method under `src/test/java/ru/ticketflowplatform` must use `@ParameterizedTest`; parameterize single-scenario tests too, and consolidate cases that share setup and assertions.
+  - Name test classes `<ProductionClass>Test`; name test methods and scenario providers `method_whenCondition_thenExpectedResultTest` and `method_whenCondition_thenExpectedResultTestCases` respectively.
   - Give test and scenario annotations Russian display names.
   - Do not use conditionals, helper methods/classes, or private methods in tests and scenario case classes.
-  - Test classes under `src/main/java/ru/ticketflowplatform/eventinventoryservice/controller` with integration tests using Testcontainers and Docker; use a class-level PostgreSQL container and `@Sql` for database setup. Follow the same naming, parameterization, and scenario conventions.
+  - Integration tests extend `helper.BaseIntegrationTest`, which provides `@SpringBootTest`, `@AutoConfigureMockMvc`, and `MockMvc`. Configure the Testcontainers JDBC URL in `src/test/resources/application.yaml`; use `@Sql` scripts for database setup.
   - Keep each database action in its own Flyway migration file, with an uppercase description (for example, `V1__CREATE_EVENTS_SCHEMA.sql`).
   - Do not change unrelated code while implementing a task.
   - Keep diffs small and intentional.

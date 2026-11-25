@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
 ### Requirement: Event supports reusable images
-An event SHALL be associated with at least one reusable image record through event-image links when created. An image MAY be linked to multiple events owned by the same organizer.
+An event MAY have zero or more reusable image records through event-image links when created. An image MAY be linked to multiple events owned by the same organizer. A future publication workflow SHALL require a cover image.
 
 #### Scenario: Draft references existing images
 - **WHEN** a valid request contains existing image IDs
@@ -10,14 +10,25 @@ An event SHALL be associated with at least one reusable image record through eve
 
 #### Scenario: Draft has no images
 - **WHEN** a draft request omits `images`, sets it to `null`, or supplies an empty array
-- **THEN** the service SHALL reject the request with `400 Bad Request` and SHALL NOT create the event
+- **THEN** the service SHALL create the draft without image links
 
-### Requirement: Image links retain display type
-An event-image link SHALL support the existing `ImageType` values `COVER` and `GALLERY`. The order of image references in the request SHALL define display order for the event.
+### Requirement: Draft image references have one cover
+When a draft request supplies images, exactly one image SHALL have type `COVER`; any number of images MAY have type `GALLERY`. A draft MAY be created without images.
+
+#### Scenario: Draft images contain exactly one cover
+- **WHEN** a request contains one `COVER` image and zero or more `GALLERY` images
+- **THEN** the service SHALL create all supplied event-image links
+
+#### Scenario: Draft images omit or duplicate the cover
+- **WHEN** a non-empty image list contains no `COVER` or more than one `COVER`
+- **THEN** the service SHALL return `400 Bad Request` and SHALL NOT create the event or image links
+
+### Requirement: Image links retain display position
+An event-image link SHALL support `ImagePosition` values `COVER` and `GALLERY`. In the create response, the `COVER` image SHALL appear before all `GALLERY` images.
 
 #### Scenario: Image is associated with an event
 - **WHEN** an image is linked to an event
-- **THEN** the relationship SHALL retain its type independently of other events using the same image
+- **THEN** the relationship SHALL retain its position independently of other events using the same image
 
 ### Requirement: Images are organizer-owned
 The service SHALL allow an event to reference only images owned by the authenticated organizer.

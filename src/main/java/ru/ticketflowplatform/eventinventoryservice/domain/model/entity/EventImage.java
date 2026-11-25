@@ -18,7 +18,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.ImageType;
+import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.ImagePosition;
 
 @Entity
 @Table(schema = "events", name = "events_images")
@@ -32,7 +32,7 @@ public class EventImage {
     private EventImageId eventImageId;
 
     @Enumerated(EnumType.STRING)
-    private ImageType type;
+    private ImagePosition type;
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;

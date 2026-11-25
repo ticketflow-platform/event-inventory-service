@@ -5,7 +5,11 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-public class CollectionUtil {
+public final class CollectionUtil {
+
+    @lombok.Generated
+    private CollectionUtil() {
+    }
 
     public static <T, R, C extends Collection<R>> C mapOrEmpty(
         Collection<T> source,

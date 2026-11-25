@@ -26,7 +26,7 @@ The event owns a single organizer identified by the authenticated Keycloak JWT `
 
 ### HTTP contract
 
-Use `POST /api/v1/events`. The request requires `title`, `ageRestriction`, at least one `categoryIds` entry, and at least one `images` entry; `description` is optional. Each image item contains an `imageId` and existing `ImageType` value (`COVER` or `GALLERY`); the array order is the display order. `ageRestriction` must be one of `0`, `6`, `12`, `16`, or `18`; `0` means no age restriction. The response includes the generated `id`, `organizerId`, supplied event data, resolved category/image references, `DRAFT` status, and creation/update timestamps. `organizerId` is never accepted from the client.
+Use `POST /api/v1/events`. Only `title` is required to create a draft; `description`, `ageRestriction`, `categoryIds`, and `images` are optional. A supplied age restriction must be one of `0`, `6`, `12`, `16`, or `18`; `0` means no age restriction. Each image item contains an image ID and `type` (`COVER` or `GALLERY`). If images are supplied, exactly one must be `COVER`; the response places it before all `GALLERY` images. Publication, which is outside this change, will require an age restriction, at least one category, and a cover image. The response includes the generated `id`, `organizerId`, supplied event data, resolved category/image references, `DRAFT` status, and creation/update timestamps. `organizerId` is never accepted from the client.
 
 The request requires an `Idempotency-Key` header. Retrying the same key with the same request returns the original result; reusing it with different request data is rejected.
 
@@ -36,15 +36,15 @@ Configure the service as an OAuth2 resource server and map the Keycloak realm ro
 
 ### Persistence model
 
-Persist `Event`, `Category`, and `Image` records with explicit link entities `EventCategory` and `EventImage`. `Image` stores its organizer owner, and `EventImage` stores the relationship type (`COVER` or `GALLERY`). The request array supplies display order, so no separate order column is required for this change. The event has one organizer and many-to-many categories/images. Do not retain a separate single `imageId` on `Event`.
+Persist `Event`, `Category`, and `Image` records with explicit link entities `EventCategory` and `EventImage`. `Image` stores its organizer owner, and `EventImage` stores the `ImagePosition` (`COVER` or `GALLERY`) using the existing `type` column. The response mapper orders links with `COVER` first and `GALLERY` afterward; no request-order guarantee is made among gallery images. The event has one organizer and many-to-many categories/images. Do not retain a separate single `imageId` on `Event`.
 
 ### Transaction boundary
 
-The application service performs idempotency lookup, reference checks, and event/link persistence in one transaction. Unknown category IDs, inactive categories, or images owned by another organizer fail the request and no partial event is committed. A draft is saved with status `DRAFT`. No Kafka producer or outbox record is created for this operation. Idempotency records map the organizer and key to the created event and request fingerprint.
+The application service performs idempotency lookup, reference checks, and event/link persistence in one transaction. It explicitly persists the link entities; the transaction makes the event and links atomic but does not cascade persistence from the event. Unknown category IDs, inactive categories, or images owned by another organizer fail the request and no partial event is committed. A draft is saved with status `DRAFT`. No Kafka producer or outbox record is created for this operation. Idempotency records map the organizer and key to the created event and request fingerprint.
 
 ### Validation and errors
 
-Require a non-blank title and an age restriction. Validate the age restriction against `0`, `6`, `12`, `16`, or `18`. Validate that every referenced category is active and every referenced image exists and belongs to the organizer. Return a structured `400` for malformed data, `409` for an idempotency conflict, or a domain-level `422` for invalid references, following the API error convention.
+Require a non-blank title. Validate a supplied age restriction against `0`, `6`, `12`, `16`, or `18`; include an unsupported value in the error detail. When a non-empty image list is supplied, require exactly one `COVER`. Validate that every referenced category is active and every referenced image exists and belongs to the organizer. Return a structured `400` for malformed data, `409` for an idempotency conflict, or a domain-level `422` for invalid references, following the API error convention. Publication-time completeness validation is not implemented here.
 
 ### Time handling
 

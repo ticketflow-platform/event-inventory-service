@@ -1,67 +1,65 @@
 package ru.ticketflowplatform.eventinventoryservice.config;
 
-import io.swagger.v3.oas.models.Components;
-import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.Operation;
-import io.swagger.v3.oas.models.PathItem;
-import io.swagger.v3.oas.models.Paths;
-import io.swagger.v3.oas.models.media.ObjectSchema;
-import io.swagger.v3.oas.models.media.Schema;
-import io.swagger.v3.oas.models.media.StringSchema;
-import io.swagger.v3.oas.models.responses.ApiResponse;
-import io.swagger.v3.oas.models.responses.ApiResponses;
-import io.swagger.v3.oas.models.tags.Tag;
-import java.util.List;
 import java.util.Locale;
-import org.junit.jupiter.api.Assertions;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.springframework.context.support.ResourceBundleMessageSource;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.springframework.context.MessageSource;
+
+import helper.TestMessageSources;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.media.Schema;
+import scenario.cases.java.config.OpenApiLocalizerTestCases.ExpectedOpenApi;
 
 class OpenApiLocalizerTest {
 
-    private final ResourceBundleMessageSource messageSource = messageSource();
+    private final MessageSource messageSource = TestMessageSources.i18n();
     private final OpenApiLocalizer localizer = new OpenApiLocalizer(messageSource);
 
-    @Test
+    @ParameterizedTest(name = "{index}: {0}")
+    @MethodSource("scenario.cases.java.config.OpenApiLocalizerTestCases#localize_whenLocaleIsRequested_thenTranslateOperationTagsAndSchemaPropertiesTestCases")
     @DisplayName("Локализует OpenAPI по указанной локали")
-    void localize_shouldTranslateOperationTagsAndSchemaProperties() {
-        StringSchema title = new StringSchema();
-        title.setDescription("i18n:swagger.event.create.title");
-        title.setExample("i18n:swagger.event.create.title.example");
-        OpenAPI openApi = new OpenAPI()
-                .tags(List.of(new Tag().name("i18n:swagger.events.tag.name").description("i18n:swagger.events.tag.description")))
-                .paths(
-                        new Paths().addPathItem(
-                                "/api/v1/events",
-                                new PathItem().post(
-                                        new Operation().summary("i18n:swagger.events.create.summary")
-                                                .description("i18n:swagger.events.create.description")
-                                                .tags(List.of("i18n:swagger.events.tag.name"))
-                                                .responses(
-                                                        new ApiResponses().addApiResponse(
-                                                                "201",
-                                                                new ApiResponse()
-                                                                        .description("i18n:swagger.events.create.response.201"))))))
-                .components(new Components().schemas(java.util.Map.of("Request", new ObjectSchema().addProperty("title", title))));
+    void localize_whenLocaleIsRequested_thenTranslateOperationTagsAndSchemaPropertiesTest(
+        String scenario,
+        Locale locale,
+        OpenAPI openApi,
+        ExpectedOpenApi expected) {
+        localizer.localize(openApi, locale);
 
-        localizer.localize(openApi, Locale.ENGLISH);
-
-        Assertions.assertEquals("TicketFlow Events API", openApi.getInfo().getTitle());
-        Assertions.assertEquals("Create an event", openApi.getPaths().get("/api/v1/events").getPost().getSummary());
-        Assertions.assertEquals("Events", openApi.getTags().getFirst().getName());
-        Assertions.assertEquals(
-                "Event title. The only field required to create a draft.",
-                ((Schema<?>) openApi.getComponents().getSchemas().get("Request").getProperties().get("title")).getDescription());
-        Assertions.assertEquals(
-                "Festival",
-                ((Schema<?>) openApi.getComponents().getSchemas().get("Request").getProperties().get("title")).getExample());
+        Assertions.assertThat(openApi.getInfo().getTitle()).isEqualTo(expected.infoTitle());
+        Assertions.assertThat(openApi.getInfo().getDescription()).isEqualTo(expected.infoDescription());
+        Assertions.assertThat(openApi.getPaths().get("/api/v1/events").getPost().getSummary())
+            .isEqualTo(expected.operationSummary());
+        Assertions.assertThat(openApi.getPaths().get("/api/v1/events").getPost().getDescription())
+            .isEqualTo(expected.operationDescription());
+        Assertions.assertThat(openApi.getTags().getFirst().getName()).isEqualTo(expected.tagName());
+        Assertions.assertThat(openApi.getTags().getFirst().getDescription()).isEqualTo(expected.tagDescription());
+        Assertions.assertThat(openApi.getPaths().get("/api/v1/events").getPost().getTags().getFirst())
+            .isEqualTo(expected.tagName());
+        Assertions.assertThat(openApi.getPaths().get("/api/v1/events").getPost().getResponses().get("201").getDescription())
+            .isEqualTo(expected.responseDescription());
+        Assertions.assertThat(
+            ((Schema<?>) openApi.getComponents().getSchemas().get("Request").getProperties().get("title"))
+                .getDescription()
+        )
+            .isEqualTo(expected.schemaDescription());
+        Assertions.assertThat(
+            ((Schema<?>) openApi.getComponents().getSchemas().get("Request").getProperties().get("title"))
+                .getExample()
+        )
+            .isEqualTo(expected.schemaExample());
     }
 
-    private static ResourceBundleMessageSource messageSource() {
-        ResourceBundleMessageSource source = new ResourceBundleMessageSource();
-        source.setBasename("i18n/messages");
-        source.setDefaultEncoding("UTF-8");
-        return source;
+    @ParameterizedTest(name = "{index}: {0}")
+    @MethodSource("scenario.cases.java.config.OpenApiLocalizerTestCases#localize_whenOptionalSectionsAreMissing_thenStillSetInfoTestCases")
+    @DisplayName("Обрабатывает OpenAPI без необязательных разделов по сценариям")
+    void localize_whenOptionalSectionsAreMissing_thenStillSetInfoTest(
+        String scenario,
+        OpenAPI openApi,
+        String expectedTitle) {
+        localizer.localize(openApi, Locale.ENGLISH);
+
+        Assertions.assertThat(openApi.getInfo().getTitle()).isEqualTo(expectedTitle);
     }
 }

@@ -1,7 +1,5 @@
 package ru.ticketflowplatform.eventinventoryservice.config;
 
-import static ru.ticketflowplatform.eventinventoryservice.domain.model.consts.I18N.MESSAGE_PREFIX;
-
 import java.util.Locale;
 
 import org.springframework.context.MessageSource;
@@ -11,6 +9,7 @@ import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.media.Schema;
 import lombok.RequiredArgsConstructor;
+import ru.ticketflowplatform.eventinventoryservice.domain.model.consts.I18N;
 
 @Component
 @RequiredArgsConstructor
@@ -81,11 +80,11 @@ public class OpenApiLocalizer {
     }
 
     private String resolve(String value, Locale locale) {
-        if (value == null || !value.startsWith(MESSAGE_PREFIX)) {
+        if (value == null || !value.startsWith(I18N.MESSAGE_PREFIX)) {
             return value;
         }
 
-        return messageSource.getMessage(value.substring(MESSAGE_PREFIX.length()), null, locale);
+        return messageSource.getMessage(value.substring(I18N.MESSAGE_PREFIX.length()), null, locale);
     }
 
     private String toMessage(String code, Locale locale) {

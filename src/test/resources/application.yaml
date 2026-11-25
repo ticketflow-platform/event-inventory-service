@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: event-inventory-service
+  messages:
+    basename: i18n/messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  datasource:
+    url: jdbc:tc:postgresql:16-alpine:///ticketflow?TC_DAEMON=true
+    username: test
+    password: test
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+
+api:
+  urls:
+    v1:
+      event: "/api/v1/events"
+    openapi: "/api/**"
+    health: "/actuator/health"
+    swagger-ui: "/swagger-ui/**"
+    swagger-ui-entry: "/swagger-ui.html"
+    openapi-docs: "/v3/api-docs/**"
+
+springdoc:
+  swagger-ui:
+    urls-primary-name: ru
+
+security:
+  jwt:
+    issuer: http://localhost:8080/realms/ticketflow
+    audience: ticketflow
+    jwk-set-uri: http://localhost:8080/realms/ticketflow/protocol/openid-connect/certs

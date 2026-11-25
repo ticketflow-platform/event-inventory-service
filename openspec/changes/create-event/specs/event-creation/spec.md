@@ -4,13 +4,14 @@
 The inventory service SHALL expose `POST /api/v1/events` and SHALL create an event with status `DRAFT` for an authenticated user with the `ORGANIZER` role. The request SHALL include an `Idempotency-Key` header.
 
 #### Scenario: Draft is created successfully
-- **WHEN** an authenticated organizer submits a valid event title, age restriction, at least one category ID, at least one typed image reference, and an optional description
+- **WHEN** an authenticated organizer submits a valid event title and optional event data
 - **THEN** the service SHALL persist the event and return `201 Created` with its generated identifier and `DRAFT` status
 - **AND** the response SHALL include the organizer identifier from the JWT `sub` claim
 
-#### Scenario: Age restriction is required
-- **WHEN** an authenticated organizer omits `ageRestriction` or supplies `null`
-- **THEN** the service SHALL reject the request with `400 Bad Request`
+#### Scenario: Draft omits publication data
+- **WHEN** an authenticated organizer omits `ageRestriction`, `categoryIds`, or `images`, supplies them as `null`, or supplies empty arrays
+- **THEN** the service SHALL create the draft with the corresponding values unset or empty
+- **AND** the draft SHALL remain unpublished
 
 #### Scenario: No minimum age restriction is selected
 - **WHEN** an authenticated organizer supplies `ageRestriction` as `0`
@@ -32,15 +33,20 @@ The service SHALL ignore any organizer identifier supplied by a client and SHALL
 - **THEN** the service SHALL not use that value and SHALL persist the token subject instead
 
 ### Requirement: Draft creation validates event references atomically
-The service SHALL create the event and its category/image links in one transaction. It SHALL reject blank titles, missing categories or images, unsupported age restrictions, unknown or inactive categories, and images that do not belong to the organizer without committing a partial event.
+The service SHALL create the event and any supplied category/image links in one transaction. It SHALL reject blank titles, unsupported non-null age restrictions, explicitly referenced unknown or inactive categories, and images that do not belong to the organizer without committing a partial event.
 
 #### Scenario: Request contains an invalid category or image
 - **WHEN** at least one referenced category or image does not exist, an explicitly referenced category is inactive, or an image belongs to another organizer
 - **THEN** the service SHALL return a client error and SHALL not persist the event or any link
 
 #### Scenario: Request contains invalid scalar data
-- **WHEN** the title is blank or the age restriction is not one of `0`, `6`, `12`, `16`, or `18`
-- **THEN** the service SHALL return `400 Bad Request` with field-level validation details
+- **WHEN** the title is blank or a supplied age restriction is not one of `0`, `6`, `12`, `16`, or `18`
+- **THEN** the service SHALL return `400 Bad Request`
+- **AND** an unsupported age restriction error SHALL include the received value in its detail
+
+#### Scenario: Draft is published
+- **WHEN** a future publication workflow attempts to publish a draft
+- **THEN** it SHALL require at least one category, an age restriction, and a cover image
 
 ### Requirement: Event creation is idempotent
 The service SHALL use `Idempotency-Key` together with the authenticated organizer and a request fingerprint to prevent duplicate draft creation.

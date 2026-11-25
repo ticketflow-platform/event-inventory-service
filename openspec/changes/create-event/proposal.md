@@ -1,6 +1,6 @@
 ## Why
 
-The inventory service currently has no implemented contract for an organizer to create an event. The first vertical slice needs a persistent draft event with at least one category and image that can be completed later with sessions, seats, and prices without publishing incomplete data to the catalog.
+The inventory service currently has no implemented contract for an organizer to create an event. The first vertical slice needs a persistent draft that requires only a title; categories, age restriction, and images can be completed before publication without exposing an incomplete event in the catalog.
 
 ## What Changes
 
@@ -8,11 +8,13 @@ The inventory service currently has no implemented contract for an organizer to 
 - Authorize event creation for users with the `ORGANIZER` role.
 - Derive the organizer identity from the authenticated JWT `sub` claim.
 - Persist event metadata, many-to-many category links, and reusable image links.
-- Require `ageRestriction`, at least one `categoryId`, and one typed image; do not upload binary files through the event endpoint.
+- Require only the event title when creating a draft; allow categories, age restriction, and images to be added later.
+- When images are supplied, require exactly one `COVER` and allow any number of `GALLERY` images; return the cover first.
 - Make creation idempotent with an organizer-scoped `Idempotency-Key`.
 - Allow only images owned by the authenticated organizer to be linked to the event.
 - Keep new events in `DRAFT` status and do not publish a Kafka event for draft creation.
 - Add validation and API error handling for malformed requests and unknown references.
+- Keep publication-only completeness checks out of draft creation; publication will require a category, an age restriction, and a cover image.
 
 ## Capabilities
 

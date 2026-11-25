@@ -31,7 +31,10 @@ import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.Idempoten
 import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.Image;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.AgeRestriction;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.CategoryStatus;
+import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.ImagePosition;
 import ru.ticketflowplatform.eventinventoryservice.domain.repository.CategoryRepository;
+import ru.ticketflowplatform.eventinventoryservice.domain.repository.EventCategoryRepository;
+import ru.ticketflowplatform.eventinventoryservice.domain.repository.EventImageRepository;
 import ru.ticketflowplatform.eventinventoryservice.domain.repository.EventRepository;
 import ru.ticketflowplatform.eventinventoryservice.domain.repository.IdempotencyKeyRepository;
 import ru.ticketflowplatform.eventinventoryservice.domain.repository.ImageRepository;
@@ -48,6 +51,11 @@ public class EventService {
     private final EventRepository eventRepository;
     private final CategoryRepository categoryRepository;
     private final ImageRepository imageRepository;
+    private final EventCategoryRepository eventCategoryRepository;
+    private final EventImageRepository eventImageRepository;
+
+    private static final String COMMA = ", ";
+
     private final IdempotencyKeyRepository idempotencyKeyRepository;
     private final EventMapper eventMapper;
     private final EventCategoryMapper eventCategoryMapper;
@@ -80,7 +88,11 @@ public class EventService {
 
         Integer ageRestriction = request.ageRestriction();
         if (ageRestriction != null && !AgeRestriction.isSupport(ageRestriction)) {
-            throw new InvalidEventRequestException("api.event.age_restriction.invalid.message", "api.event.age_restriction.invalid.detail");
+            throw new InvalidEventRequestException(
+                "api.event.age_restriction.invalid.message",
+                "api.event.age_restriction.invalid.detail",
+                ageRestriction
+            );
         }
 
         List<UUID> categoryIds = CollectionUtil.mapOrEmpty(request.categoryIds(), CategoryRequestDto::id, ArrayList::new);
@@ -89,6 +101,13 @@ public class EventService {
         List<ImageRequestDto> imageRequests = CollectionUtil.mapOrEmpty(request.images(), imageRequest -> imageRequest, ArrayList::new);
         List<UUID> imageIds = CollectionUtil.mapOrEmpty(imageRequests, ImageRequestDto::id, ArrayList::new);
         ensureUnique(imageIds, "api.event.images.duplicate.message", "api.event.images.duplicate.detail");
+        long coverCount = imageRequests.stream().filter(image -> image.type() == ImagePosition.COVER).count();
+        if (!imageRequests.isEmpty() && coverCount != 1) {
+            throw new InvalidEventRequestException(
+                "api.event.images.cover.invalid.message",
+                "api.event.images.cover.invalid.detail"
+            );
+        }
 
         List<Category> categories = findActiveCategories(categoryIds);
         List<Image> images = findOwnedImages(imageIds, organizerId);
@@ -107,9 +126,11 @@ public class EventService {
         );
 
         Event eventWithEventCategories = savedEvent.addEventCategories(eventCategories);
+        eventCategoryRepository.saveAll(eventCategories);
 
         List<EventImage> eventImages = prepareEventImages(imageRequests, savedEvent, imagesById, now);
         Event eventWithImages = eventWithEventCategories.addEventImages(eventImages);
+        eventImageRepository.saveAll(eventImages);
 
         try {
             idempotencyKeyRepository.saveAndFlush(
@@ -139,8 +160,8 @@ public class EventService {
 
     private List<Category> findActiveCategories(List<UUID> ids) {
         List<Category> categories = ids.isEmpty() ? List.of() : categoryRepository.findAllByIdInAndStatus(ids, CategoryStatus.ACTIVE);
-
         Set<UUID> foundIds = categories.stream().map(Category::getId).collect(Collectors.toSet());
+
         List<UUID> missingIds = ids.stream().filter(id -> !foundIds.contains(id)).distinct().toList();
         if (!missingIds.isEmpty()) {
             throw new InvalidEventReferenceException(
@@ -167,6 +188,7 @@ public class EventService {
         List<Image> images = ids.isEmpty() ? List.of() : imageRepository.findAllByIdInAndOrganizerId(ids, organizerId);
         Set<UUID> foundIds = images.stream().map(Image::getId).collect(Collectors.toSet());
         List<UUID> missingIds = ids.stream().filter(id -> !foundIds.contains(id)).distinct().toList();
+
         if (!missingIds.isEmpty()) {
             throw new InvalidEventReferenceException(
                 selectMessageCode(missingIds, "api.event.images.not_found.message.one", "api.event.images.not_found.message.many"),
@@ -183,11 +205,13 @@ public class EventService {
     }
 
     private String formatIds(List<UUID> ids) {
-        return String.join(", ", ids.stream().map(UUID::toString).toList());
+        return String.join(COMMA, ids.stream().map(UUID::toString).toList());
     }
 
     private List<EventCategory> prepareEventCategories(List<Category> categories, Event savedEvent, Instant now) {
-        return categories.stream().map(category -> eventCategoryMapper.toEntity(savedEvent, category, now)).toList();
+        return categories.stream().map(
+            category -> eventCategoryMapper.toEntity(savedEvent, category, now)
+        ).toList();
     }
 
     private List<EventImage> prepareEventImages(
@@ -197,7 +221,12 @@ public class EventService {
         Instant now) {
         return imageRequests.stream()
             .map(
-                imageRequest -> eventImageMapper.toEntity(savedEvent, imagesById.get(imageRequest.id()), imageRequest.type(), now)
+                imageRequest -> eventImageMapper.toEntity(
+                    savedEvent,
+                    imagesById.get(imageRequest.id()),
+                    imageRequest.type(),
+                    now
+                )
             ).toList();
     }
 

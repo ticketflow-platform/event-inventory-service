@@ -2,8 +2,7 @@ package ru.ticketflowplatform.eventinventoryservice.mapper;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.UUID;
-import org.junit.jupiter.api.Assertions;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -11,53 +10,55 @@ import ru.ticketflowplatform.eventinventoryservice.domain.model.dto.out.CreateEv
 import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.Event;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.EventImage;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.Image;
-import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.ImageType;
+import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.ImagePosition;
 
 class EventImageMapperTest {
 
     private final EventImageMapper eventImageMapper = new EventImageMapperImpl();
 
     @ParameterizedTest(name = "{index}: {0}")
-    @MethodSource("ru.ticketflowplatform.eventinventoryservice.scenario.cases.EventImageMapperTestCases#toEntity_whenEventImageDataIsProvided_shouldMapLinkTestCases")
-    @DisplayName("Преобразует событие и изображение в связь по сценариям")
-    void toEntity_whenEventImageDataIsProvided_shouldMapLinkTest(
-            String scenario,
-            Event event,
-            Image image,
-            ImageType type,
-            Instant now,
-            UUID eventId,
-            UUID imageId
-    ) {
+    @MethodSource("scenario.cases.java.mapper.EventImageMapperTestCases#toEntity_whenLinkDataIsProvided_thenMapLinkTestCases")
+    @DisplayName("Преобразует данные обложки и галереи в связи")
+    void toEntity_whenLinkDataIsProvided_thenMapLinkTest(
+        String scenario,
+        Event event,
+        Image image,
+        ImagePosition type,
+        Instant now,
+        EventImage.EventImageId expectedId) {
         EventImage link = eventImageMapper.toEntity(event, image, type, now);
 
-        Assertions.assertEquals(eventId, link.getEventImageId().getEventId());
-        Assertions.assertEquals(imageId, link.getEventImageId().getImageId());
-        Assertions.assertSame(event, link.getEvent());
-        Assertions.assertSame(image, link.getImage());
-        Assertions.assertEquals(type, link.getType());
-        Assertions.assertEquals(now, link.getCreatedAt());
+        Assertions.assertThat(link.getEventImageId()).isEqualTo(expectedId);
+        Assertions.assertThat(link.getEvent()).isSameAs(event);
+        Assertions.assertThat(link.getImage()).isSameAs(image);
+        Assertions.assertThat(link.getType()).isEqualTo(type);
+        Assertions.assertThat(link.getCreatedAt()).isEqualTo(now);
     }
 
     @ParameterizedTest(name = "{index}: {0}")
-    @MethodSource("ru.ticketflowplatform.eventinventoryservice.scenario.cases.EventImageMapperTestCases#toResponse_whenLinkIsProvided_shouldMapResponseTestCases")
-    @DisplayName("Преобразует связь изображения в ответ по сценариям")
-    void toResponse_whenLinkIsProvided_shouldMapResponseTest(
-            String scenario,
-            EventImage link,
-            EventImageResponseDto expected
-    ) {
-        Assertions.assertEquals(expected, eventImageMapper.toResponse(link));
+    @MethodSource("scenario.cases.java.mapper.EventImageMapperTestCases#toEntity_whenAllInputsAreNull_thenReturnNullTestCases")
+    @DisplayName("Возвращает null, если все аргументы преобразования отсутствуют")
+    void toEntity_whenAllInputsAreNull_thenReturnNullTest(String scenario) {
+        Assertions.assertThat(eventImageMapper.toEntity(null, null, null, null)).isNull();
     }
 
     @ParameterizedTest(name = "{index}: {0}")
-    @MethodSource("ru.ticketflowplatform.eventinventoryservice.scenario.cases.EventImageMapperTestCases#toResponses_whenLinksAreProvided_shouldMapResponsesTestCases")
-    @DisplayName("Преобразует список связей изображений по сценариям")
-    void toResponses_whenLinksAreProvided_shouldMapResponsesTest(
-            String scenario,
-            List<EventImage> links,
-            List<EventImageResponseDto> expected
-    ) {
-        Assertions.assertEquals(expected, eventImageMapper.toResponses(links));
+    @MethodSource("scenario.cases.java.mapper.EventImageMapperTestCases#toResponse_whenValidLinkIsProvided_thenMapResponseTestCases")
+    @DisplayName("Преобразует связь изображения в ответ")
+    void toResponse_whenValidLinkIsProvided_thenMapResponseTest(
+        String scenario,
+        EventImage link,
+        EventImageResponseDto expected) {
+        Assertions.assertThat(eventImageMapper.toResponse(link)).isEqualTo(expected);
+    }
+
+    @ParameterizedTest(name = "{index}: {0}")
+    @MethodSource("scenario.cases.java.mapper.EventImageMapperTestCases#toResponses_whenLinksAreProvided_thenPlaceCoverFirstTestCases")
+    @DisplayName("Возвращает обложку перед изображениями галереи")
+    void toResponses_whenLinksAreProvided_thenPlaceCoverFirstTest(
+        String scenario,
+        List<EventImage> links,
+        List<EventImageResponseDto> expected) {
+        Assertions.assertThat(eventImageMapper.toResponses(links)).isEqualTo(expected);
     }
 }

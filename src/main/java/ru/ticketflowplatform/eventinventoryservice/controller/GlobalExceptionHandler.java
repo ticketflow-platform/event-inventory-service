@@ -2,6 +2,7 @@ package ru.ticketflowplatform.eventinventoryservice.controller;
 
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import org.springframework.context.MessageSource;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingRequestHeaderException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
@@ -154,17 +156,14 @@ public class GlobalExceptionHandler {
 
     private String parameterName(ParameterValidationResult result) {
         RequestHeader header = result.getMethodParameter().getParameterAnnotation(RequestHeader.class);
-        if (header != null) {
-            if (!header.name().isBlank()) {
-                return header.name();
-            }
-
-            if (!header.value().isBlank()) {
-                return header.value();
-            }
+        if (header != null && !header.name().isBlank()) {
+            return header.name();
+        }
+        RequestParam requestParam = result.getMethodParameter().getParameterAnnotation(RequestParam.class);
+        if (requestParam != null && !requestParam.name().isBlank()) {
+            return requestParam.name();
         }
 
-        String name = result.getMethodParameter().getParameterName();
-        return name == null ? "request" : name;
+        return Objects.toString(result.getMethodParameter().getParameterName(), "request");
     }
 }

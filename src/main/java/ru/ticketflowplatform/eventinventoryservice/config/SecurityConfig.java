@@ -21,8 +21,8 @@ import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
+import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
 
@@ -72,7 +72,7 @@ public class SecurityConfig {
         @Value("${security.jwt.issuer}") String issuer,
         @Value("${security.jwt.audience}") String audience,
         MessageSource messageSource) {
-        var decoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
+        NimbusJwtDecoder decoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
         OAuth2TokenValidator<Jwt> issuerValidator = JwtValidators.createDefaultWithIssuer(issuer);
 
         OAuth2TokenValidator<Jwt> audienceValidator = getAudienceValidator(
@@ -89,7 +89,7 @@ public class SecurityConfig {
     }
 
     private JwtAuthenticationConverter jwtAuthenticationConverter() {
-        var converter = new JwtAuthenticationConverter();
+        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
         converter.setJwtGrantedAuthoritiesConverter(jwtAuthoritiesConverter());
         return converter;
     }
@@ -108,8 +108,8 @@ public class SecurityConfig {
 
     private Converter<Jwt, Collection<GrantedAuthority>> jwtAuthoritiesConverter() {
         return jwt -> {
-            var authorities = new ArrayList<GrantedAuthority>();
-            var realmAccess = jwt.getClaimAsMap(REALM_ACCESS_CLAIM);
+            ArrayList<GrantedAuthority> authorities = new ArrayList<>();
+            Map<String, Object> realmAccess = jwt.getClaimAsMap(REALM_ACCESS_CLAIM);
             List<GrantedAuthority> enriched = enrichAuthority(authorities, realmAccess);
             return enriched;
         };

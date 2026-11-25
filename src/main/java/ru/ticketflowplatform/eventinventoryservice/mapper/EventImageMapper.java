@@ -1,6 +1,7 @@
 package ru.ticketflowplatform.eventinventoryservice.mapper;
 
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -9,7 +10,7 @@ import ru.ticketflowplatform.eventinventoryservice.domain.model.dto.out.CreateEv
 import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.Event;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.EventImage;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.Image;
-import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.ImageType;
+import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.ImagePosition;
 
 @Mapper(componentModel = ComponentModel.SPRING)
 public interface EventImageMapper {
@@ -20,10 +21,15 @@ public interface EventImageMapper {
     @Mapping(target = "image", source = "image")
     @Mapping(target = "type", source = "type")
     @Mapping(target = "createdAt", source = "now")
-    EventImage toEntity(Event event, Image image, ImageType type, Instant now);
+    EventImage toEntity(Event event, Image image, ImagePosition type, Instant now);
 
     @Mapping(target = "imageId", source = "image.id")
     EventImageResponseDto toResponse(EventImage eventImage);
 
-    List<EventImageResponseDto> toResponses(List<EventImage> eventImages);
+    default List<EventImageResponseDto> toResponses(List<EventImage> eventImages) {
+        return eventImages.stream()
+            .sorted(Comparator.comparing(EventImage::getType).thenComparing(eventImage -> eventImage.getImage().getId()))
+            .map(this::toResponse)
+            .toList();
+    }
 }

@@ -5,7 +5,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.EventStatus;
-import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.ImageType;
+import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.ImagePosition;
 
 public record CreateEventResponseDto(@Schema(description = "i18n:swagger.event.response.id") UUID id,
     @Schema(description = "i18n:swagger.event.response.organizer_id") String organizerId,
@@ -21,7 +21,7 @@ public record CreateEventResponseDto(@Schema(description = "i18n:swagger.event.r
     @Schema(description = "i18n:swagger.event.response.cancelled_at") Instant cancelledAt,
     @Schema(description = "i18n:swagger.event.response.completed_at") Instant completedAt) {
     public record EventImageResponseDto(@Schema(description = "i18n:swagger.event.response.image.image_id") UUID imageId,
-        @Schema(description = "i18n:swagger.event.response.image.type") ImageType type,
+        @Schema(description = "i18n:swagger.event.response.image.type") ImagePosition type,
         @Schema(description = "i18n:swagger.event.response.image.created_at") Instant createdAt) {
     }
 }
