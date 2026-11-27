@@ -35,3 +35,12 @@ out/
 
 ### VS Code ###
 .vscode/
+.zed/*
+!.zed/settings.json
+/gradle
+gradlew
+gradlew.bat
+buildSrc
+.zed
+scripts
+opencode.jsonc

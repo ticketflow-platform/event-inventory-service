@@ -6,8 +6,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class EventInventoryServiceApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(EventInventoryServiceApplication.class, args);
+    @lombok.Generated
+    private EventInventoryServiceApplication() {
     }
 
+    public static void main(String[] args) {
+            SpringApplication.run(EventInventoryServiceApplication.class, args);
+    }
 }
