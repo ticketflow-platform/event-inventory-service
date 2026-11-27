@@ -32,7 +32,7 @@ public class EventImage {
     private EventImageId eventImageId;
 
     @Enumerated(EnumType.STRING)
-    private ImagePosition type;
+    private ImagePosition position;
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;

@@ -1,7 +1,6 @@
 package helper;
 
 import java.nio.charset.StandardCharsets;
-
 import org.springframework.context.MessageSource;
 import org.springframework.context.support.ResourceBundleMessageSource;
 
@@ -14,5 +13,6 @@ public final class TestMessageSources {
         return messageSource;
     }
 
-    private TestMessageSources() {}
+    private TestMessageSources() {
+    }
 }

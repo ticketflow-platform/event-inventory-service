@@ -15,7 +15,8 @@ public interface ErrorMapper {
     @Mapping(target = "message", source = "message")
     @Mapping(target = "detail", source = "detail")
     @Mapping(target = "errors", source = "errors")
-    ErrorResponseDto toResponse(int status, String message, String detail, List<FieldErrorResponseDto> errors);
+    ErrorResponseDto toResponse(
+        int status, String message, String detail, List<FieldErrorResponseDto> errors);
 
     @Mapping(target = "field", source = "field")
     @Mapping(target = "message", source = "defaultMessage")

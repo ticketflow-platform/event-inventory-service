@@ -66,8 +66,13 @@ The service SHALL use `Idempotency-Key` together with the authenticated organize
 
 #### Scenario: Same command is retried
 
-- **WHEN** the same organizer repeats the request with the same `Idempotency-Key` and identical request content
+- **WHEN** the same organizer repeats a request after its result has been stored, using the same `Idempotency-Key` and identical request content
 - **THEN** the service SHALL return the original event result and SHALL NOT create another event
+
+#### Scenario: Concurrent request loses the idempotency-key race
+
+- **WHEN** two requests from the same organizer are processed concurrently with the same `Idempotency-Key` and identical request content, and one request wins the database uniqueness race
+- **THEN** the losing request SHALL return `409 Conflict` and SHALL NOT create another event
 
 #### Scenario: Key is reused with different content
 

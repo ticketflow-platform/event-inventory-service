@@ -28,53 +28,66 @@ public final class EventMapperTestCases {
                 new CreateEventRequestDto(
                     "Concert",
                     "Live music",
-                    List.of(new CategoryRequestDto(UUID.fromString("00000000-0000-0000-0000-000000000001"))),
+                    List.of(
+                        new CategoryRequestDto(
+                            UUID.fromString(
+                                "00000000-0000-0000-0000-000000000001"))),
                     List.of(
                         new ImageRequestDto(
-                            UUID.fromString("00000000-0000-0000-0000-000000000002"),
-                            ImagePosition.COVER
-                        )
-                    ),
-                    16
-                ),
+                            UUID.fromString(
+                                "00000000-0000-0000-0000-000000000002"),
+                            ImagePosition.COVER)),
+                    16),
                 "organizer-1",
                 16,
                 now,
                 "Concert",
-                "Live music"
-            ),
+                "Live music"),
             Arguments.of(
                 "Без описания",
                 new CreateEventRequestDto(
                     "Cinema",
                     null,
-                    List.of(new CategoryRequestDto(UUID.fromString("00000000-0000-0000-0000-000000000001"))),
+                    List.of(
+                        new CategoryRequestDto(
+                            UUID.fromString(
+                                "00000000-0000-0000-0000-000000000001"))),
                     List.of(
                         new ImageRequestDto(
-                            UUID.fromString("00000000-0000-0000-0000-000000000002"),
-                            ImagePosition.COVER
-                        )
-                    ),
-                    0
-                ),
+                            UUID.fromString(
+                                "00000000-0000-0000-0000-000000000002"),
+                            ImagePosition.COVER)),
+                    0),
                 "organizer-2",
                 0,
                 now,
                 "Cinema",
-                null
-            )
-        );
+                null));
     }
 
     public static Stream<Arguments> toEntity_whenOptionalInputsAreMissing_thenMapAvailableValuesTestCases() {
         Instant now = Instant.parse("2026-01-02T03:04:05Z");
         CreateEventRequestDto request = new CreateEventRequestDto("Festival", "Live", null, null, null);
         return Stream.of(
-            Arguments.of("Запрос отсутствует, организатор задан", null, "organizer-1", null, null, null, null),
-            Arguments.of("Задано только возрастное ограничение", null, null, 16, null, null, null),
+            Arguments.of(
+                "Запрос отсутствует, организатор задан",
+                null,
+                "organizer-1",
+                null,
+                null,
+                null,
+                null),
+            Arguments.of(
+                "Задано только возрастное ограничение", null, null, 16, null, null, null),
             Arguments.of("Задано только время", null, null, null, now, null, null),
-            Arguments.of("В запросе отсутствует время", request, "organizer-2", null, null, "Festival", "Live")
-        );
+            Arguments.of(
+                "В запросе отсутствует время",
+                request,
+                "organizer-2",
+                null,
+                null,
+                "Festival",
+                "Live"));
     }
 
     public static Stream<Arguments> toEntity_whenAllInputsAreNull_thenReturnNullTestCases() {
@@ -106,11 +119,7 @@ public final class EventMapperTestCases {
                         new EventCategory.EventCategoryId(eventId, categoryId),
                         now,
                         event,
-                        category
-                    )
-                )
-            )
-        );
+                        category))));
         event.setEventImages(
             new ArrayList<>(
                 List.of(
@@ -119,26 +128,23 @@ public final class EventMapperTestCases {
                         ImagePosition.COVER,
                         now,
                         event,
-                        image
-                    )
-                )
-            )
-        );
+                        image))));
         CreateEventResponseDto expected = new CreateEventResponseDto(
             eventId,
             "organizer-1",
             "Concert",
             "Live music",
             List.of(categoryId),
-            List.of(new CreateEventResponseDto.EventImageResponseDto(imageId, ImagePosition.COVER, now)),
+            List.of(
+                new CreateEventResponseDto.EventImageResponseDto(
+                    imageId, ImagePosition.COVER, now)),
             16,
             EventStatus.DRAFT,
             now,
             now,
             null,
             null,
-            null
-        );
+            null);
 
         return Stream.of(Arguments.of("Категория и обложка", event, expected));
     }
@@ -146,5 +152,4 @@ public final class EventMapperTestCases {
     public static Stream<Arguments> toResponse_whenEventIsMissing_thenReturnNullTestCases() {
         return Stream.of(Arguments.of("Событие отсутствует", (Event) null));
     }
-
 }

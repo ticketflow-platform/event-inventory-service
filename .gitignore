@@ -35,5 +35,8 @@ out/
 
 ### VS Code ###
 .vscode/
-.zed
+.zed/*
+!.zed/settings.json
 /gradle
+gradlew
+gradlew.bat

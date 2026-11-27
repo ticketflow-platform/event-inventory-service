@@ -15,7 +15,8 @@ public class LocaleConfig {
     LocaleResolver localeResolver() {
         AcceptHeaderLocaleResolver resolver = new AcceptHeaderLocaleResolver();
         resolver.setDefaultLocale(Locale.forLanguageTag(I18N.RUSSIAN_LANGUAGE_TAG));
-        resolver.setSupportedLocales(List.of(Locale.forLanguageTag(I18N.RUSSIAN_LANGUAGE_TAG), Locale.ENGLISH));
+        resolver.setSupportedLocales(
+            List.of(Locale.forLanguageTag(I18N.RUSSIAN_LANGUAGE_TAG), Locale.ENGLISH));
         return resolver;
     }
 }

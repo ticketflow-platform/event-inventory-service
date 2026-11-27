@@ -18,9 +18,9 @@ public interface EventImageMapper {
     @Mapping(target = "eventImageId.imageId", source = "image.id")
     @Mapping(target = "event", source = "event")
     @Mapping(target = "image", source = "image")
-    @Mapping(target = "type", source = "type")
+    @Mapping(target = "position", source = "position")
     @Mapping(target = "createdAt", source = "now")
-    EventImage toEntity(Event event, Image image, ImagePosition type, Instant now);
+    EventImage toEntity(Event event, Image image, ImagePosition position, Instant now);
 
     @Mapping(target = "imageId", source = "image.id")
     EventImageResponseDto toResponse(EventImage eventImage);

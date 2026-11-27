@@ -28,35 +28,30 @@ public final class EventImageMapperTestCases {
                 image,
                 ImagePosition.COVER,
                 now,
-                new EventImage.EventImageId(eventId, imageId)
-            ),
+                new EventImage.EventImageId(eventId, imageId)),
             Arguments.of(
                 "Изображение галереи",
                 event,
                 image,
                 ImagePosition.GALLERY,
                 now,
-                new EventImage.EventImageId(eventId, imageId)
-            ),
+                new EventImage.EventImageId(eventId, imageId)),
             Arguments.of(
                 "Только событие",
                 event,
                 null,
                 ImagePosition.COVER,
                 now,
-                new EventImage.EventImageId(eventId, null)
-            ),
+                new EventImage.EventImageId(eventId, null)),
             Arguments.of(
                 "Только изображение",
                 null,
                 image,
                 ImagePosition.COVER,
                 now,
-                new EventImage.EventImageId(null, imageId)
-            ),
+                new EventImage.EventImageId(null, imageId)),
             Arguments.of("Только позиция", null, null, ImagePosition.GALLERY, null, null),
-            Arguments.of("Только время", null, null, null, now, null)
-        );
+            Arguments.of("Только время", null, null, null, now, null));
     }
 
     public static Stream<Arguments> toEntity_whenAllInputsAreNull_thenReturnNullTestCases() {
@@ -70,16 +65,21 @@ public final class EventImageMapperTestCases {
         Instant now = Instant.parse("2026-01-02T03:04:05Z");
         EventImage link = new EventImage();
         link.setImage(image);
-        link.setType(ImagePosition.COVER);
+        link.setPosition(ImagePosition.COVER);
         link.setCreatedAt(now);
         EventImage linkWithoutImage = new EventImage();
-        linkWithoutImage.setType(ImagePosition.GALLERY);
+        linkWithoutImage.setPosition(ImagePosition.GALLERY);
         linkWithoutImage.setCreatedAt(now);
         return Stream.of(
-            Arguments.of("Обложка", link, new EventImageResponseDto(imageId, ImagePosition.COVER, now)),
-            Arguments.of("Изображение не задано", linkWithoutImage, new EventImageResponseDto(null, ImagePosition.GALLERY, now)),
-            Arguments.of("Связь отсутствует", null, null)
-        );
+            Arguments.of(
+                "Обложка",
+                link,
+                new EventImageResponseDto(imageId, ImagePosition.COVER, now)),
+            Arguments.of(
+                "Изображение не задано",
+                linkWithoutImage,
+                new EventImageResponseDto(null, ImagePosition.GALLERY, now)),
+            Arguments.of("Связь отсутствует", null, null));
     }
 
     public static Stream<Arguments> toResponses_whenLinksAreProvided_thenPreserveOrderTestCases() {
@@ -95,28 +95,26 @@ public final class EventImageMapperTestCases {
         Instant now = Instant.parse("2026-01-02T03:04:05Z");
         EventImage coverLink = new EventImage();
         coverLink.setImage(cover);
-        coverLink.setType(ImagePosition.COVER);
+        coverLink.setPosition(ImagePosition.COVER);
         coverLink.setCreatedAt(now);
         EventImage galleryLink = new EventImage();
         galleryLink.setImage(gallery);
-        galleryLink.setType(ImagePosition.GALLERY);
+        galleryLink.setPosition(ImagePosition.GALLERY);
         galleryLink.setCreatedAt(now);
         EventImage otherGalleryLink = new EventImage();
         otherGalleryLink.setImage(otherGallery);
-        otherGalleryLink.setType(ImagePosition.GALLERY);
+        otherGalleryLink.setPosition(ImagePosition.GALLERY);
         otherGalleryLink.setCreatedAt(now);
         return Stream.of(
             Arguments.of(
                 "Порядок изображений сохраняется",
                 List.of(otherGalleryLink, coverLink, galleryLink),
                 List.of(
-                    new EventImageResponseDto(otherGalleryId, ImagePosition.GALLERY, now),
+                    new EventImageResponseDto(
+                        otherGalleryId, ImagePosition.GALLERY, now),
                     new EventImageResponseDto(coverId, ImagePosition.COVER, now),
-                    new EventImageResponseDto(galleryId, ImagePosition.GALLERY, now)
-                )
-            ),
+                    new EventImageResponseDto(galleryId, ImagePosition.GALLERY, now))),
             Arguments.of("Пустой список изображений", List.of(), List.of()),
-            Arguments.of("Список изображений отсутствует", null, null)
-        );
+            Arguments.of("Список изображений отсутствует", null, null));
     }
 }

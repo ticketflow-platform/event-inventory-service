@@ -7,7 +7,8 @@ import java.util.UUID;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.EventStatus;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.ImagePosition;
 
-public record CreateEventResponseDto(@Schema(description = "i18n:swagger.event.response.id") UUID id,
+public record CreateEventResponseDto(
+    @Schema(description = "i18n:swagger.event.response.id") UUID id,
     @Schema(description = "i18n:swagger.event.response.organizer_id") String organizerId,
     @Schema(description = "i18n:swagger.event.response.title") String title,
     @Schema(description = "i18n:swagger.event.response.description") String description,
@@ -20,8 +21,9 @@ public record CreateEventResponseDto(@Schema(description = "i18n:swagger.event.r
     @Schema(description = "i18n:swagger.event.response.published_at") Instant publishedAt,
     @Schema(description = "i18n:swagger.event.response.cancelled_at") Instant cancelledAt,
     @Schema(description = "i18n:swagger.event.response.completed_at") Instant completedAt) {
-    public record EventImageResponseDto(@Schema(description = "i18n:swagger.event.response.image.image_id") UUID imageId,
-        @Schema(description = "i18n:swagger.event.response.image.type") ImagePosition type,
+    public record EventImageResponseDto(
+        @Schema(description = "i18n:swagger.event.response.image.image_id") UUID imageId,
+        @Schema(description = "i18n:swagger.event.response.image.position") ImagePosition position,
         @Schema(description = "i18n:swagger.event.response.image.created_at") Instant createdAt) {
     }
 }

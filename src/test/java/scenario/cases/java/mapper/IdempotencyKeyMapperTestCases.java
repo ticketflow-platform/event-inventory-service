@@ -18,9 +18,7 @@ public final class IdempotencyKeyMapperTestCases {
                 "request-1",
                 "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
                 event,
-                Instant.parse("2026-01-02T03:04:05Z")
-            )
-        );
+                Instant.parse("2026-01-02T03:04:05Z")));
     }
 
     public static Stream<Arguments> toEntity_whenOneInputIsProvided_thenMapAvailableValueTestCases() {
@@ -32,8 +30,7 @@ public final class IdempotencyKeyMapperTestCases {
             Arguments.of("Только ключ", null, "request-1", null, null, null),
             Arguments.of("Только hash", null, null, "request-hash", null, null),
             Arguments.of("Только событие", null, null, null, event, null),
-            Arguments.of("Только время", null, null, null, null, now)
-        );
+            Arguments.of("Только время", null, null, null, null, now));
     }
 
     public static Stream<Arguments> toEntity_whenAllInputsAreNull_thenReturnNullTestCases() {

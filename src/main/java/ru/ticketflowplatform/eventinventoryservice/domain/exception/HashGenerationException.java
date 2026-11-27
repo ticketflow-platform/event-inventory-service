@@ -11,7 +11,6 @@ public class HashGenerationException extends ErrorResponseException {
             "api.error.hash_generation.message",
             "api.error.hash_generation.detail",
             cause,
-            List.of()
-        );
+            List.of());
     }
 }

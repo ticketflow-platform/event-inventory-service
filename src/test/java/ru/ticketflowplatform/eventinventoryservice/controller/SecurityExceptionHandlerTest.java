@@ -17,7 +17,8 @@ import tools.jackson.databind.ObjectMapper;
 class SecurityExceptionHandlerTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final SecurityExceptionHandler handler = new SecurityExceptionHandler(objectMapper, TestMessageSources.i18n());
+    private final SecurityExceptionHandler handler = new SecurityExceptionHandler(objectMapper,
+        TestMessageSources.i18n());
     private final MockHttpServletResponse response = new MockHttpServletResponse();
 
     @ParameterizedTest(name = "{index}: {0}")
@@ -28,14 +29,20 @@ class SecurityExceptionHandlerTest {
         MockHttpServletRequest request,
         AuthenticationException exception,
         String expectedChallenge,
-        ErrorResponseDto expected) throws Exception {
+        ErrorResponseDto expected)
+        throws Exception {
         handler.commence(request, response, exception);
 
         Assertions.assertThat(response.getStatus()).isEqualTo(expected.status());
         Assertions.assertThat(response.getHeader("WWW-Authenticate")).isEqualTo(expectedChallenge);
-        Assertions.assertThat(response.getContentType()).isEqualTo(MediaType.APPLICATION_JSON_VALUE + ";charset=UTF-8");
-        Assertions.assertThat(response.getCharacterEncoding()).isEqualTo(StandardCharsets.UTF_8.name());
-        Assertions.assertThat(objectMapper.readValue(response.getContentAsString(), ErrorResponseDto.class)).isEqualTo(expected);
+        Assertions.assertThat(response.getContentType())
+            .isEqualTo(MediaType.APPLICATION_JSON_VALUE + ";charset=UTF-8");
+        Assertions.assertThat(response.getCharacterEncoding())
+            .isEqualTo(StandardCharsets.UTF_8.name());
+        Assertions.assertThat(
+            objectMapper.readValue(
+                response.getContentAsString(), ErrorResponseDto.class))
+            .isEqualTo(expected);
     }
 
     @ParameterizedTest(name = "{index}: {0}")
@@ -46,13 +53,19 @@ class SecurityExceptionHandlerTest {
         MockHttpServletRequest request,
         AccessDeniedException exception,
         String expectedChallenge,
-        ErrorResponseDto expected) throws Exception {
+        ErrorResponseDto expected)
+        throws Exception {
         handler.handle(request, response, exception);
 
         Assertions.assertThat(response.getStatus()).isEqualTo(expected.status());
         Assertions.assertThat(response.getHeader("WWW-Authenticate")).isEqualTo(expectedChallenge);
-        Assertions.assertThat(response.getContentType()).isEqualTo(MediaType.APPLICATION_JSON_VALUE + ";charset=UTF-8");
-        Assertions.assertThat(response.getCharacterEncoding()).isEqualTo(StandardCharsets.UTF_8.name());
-        Assertions.assertThat(objectMapper.readValue(response.getContentAsString(), ErrorResponseDto.class)).isEqualTo(expected);
+        Assertions.assertThat(response.getContentType())
+            .isEqualTo(MediaType.APPLICATION_JSON_VALUE + ";charset=UTF-8");
+        Assertions.assertThat(response.getCharacterEncoding())
+            .isEqualTo(StandardCharsets.UTF_8.name());
+        Assertions.assertThat(
+            objectMapper.readValue(
+                response.getContentAsString(), ErrorResponseDto.class))
+            .isEqualTo(expected);
     }
 }

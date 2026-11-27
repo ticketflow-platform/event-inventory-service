@@ -14,7 +14,6 @@ public final class AgeRestrictionTestCases {
             Arguments.of(18, true),
             Arguments.of(null, false),
             Arguments.of(-1, false),
-            Arguments.of(21, false)
-        );
+            Arguments.of(21, false));
     }
 }

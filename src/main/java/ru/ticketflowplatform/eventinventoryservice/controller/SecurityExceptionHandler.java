@@ -18,8 +18,8 @@ import org.springframework.security.oauth2.server.resource.web.access.BearerToke
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
-import tools.jackson.databind.ObjectMapper;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.dto.out.ErrorResponseDto;
+import tools.jackson.databind.ObjectMapper;
 
 @Component
 @RequiredArgsConstructor
@@ -29,28 +29,38 @@ public class SecurityExceptionHandler implements AuthenticationEntryPoint, Acces
     private final MessageSource messageSource;
 
     @Override
-    public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException exception) throws IOException {
+    public void commence(
+        HttpServletRequest request,
+        HttpServletResponse response,
+        AuthenticationException exception)
+        throws IOException {
         new BearerTokenAuthenticationEntryPoint().commence(request, response, exception);
         boolean invalidAudience = hasInvalidAudience(exception);
         writeError(
             request,
             response,
             HttpStatus.UNAUTHORIZED,
-            invalidAudience ? "api.error.invalid_audience.message" : "api.error.unauthorized.message",
-            invalidAudience ? "api.error.invalid_audience.detail" : "api.error.unauthorized.detail"
-        );
+            invalidAudience
+                ? "api.error.invalid_audience.message"
+                : "api.error.unauthorized.message",
+            invalidAudience
+                ? "api.error.invalid_audience.detail"
+                : "api.error.unauthorized.detail");
     }
 
     @Override
-    public void handle(HttpServletRequest request, HttpServletResponse response, AccessDeniedException exception) throws IOException {
+    public void handle(
+        HttpServletRequest request,
+        HttpServletResponse response,
+        AccessDeniedException exception)
+        throws IOException {
         new BearerTokenAccessDeniedHandler().handle(request, response, exception);
         writeError(
             request,
             response,
             HttpStatus.FORBIDDEN,
             "api.error.forbidden.message",
-            "api.error.forbidden.detail"
-        );
+            "api.error.forbidden.detail");
     }
 
     private void writeError(
@@ -58,7 +68,8 @@ public class SecurityExceptionHandler implements AuthenticationEntryPoint, Acces
         HttpServletResponse response,
         HttpStatus status,
         String messageCode,
-        String detailCode) throws IOException {
+        String detailCode)
+        throws IOException {
         response.setStatus(status.value());
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
@@ -66,19 +77,16 @@ public class SecurityExceptionHandler implements AuthenticationEntryPoint, Acces
             response.getOutputStream(),
             new ErrorResponseDto(
                 status.value(),
-                messageSource.getMessage(messageCode, new Object[0], request.getLocale()),
-                messageSource.getMessage(detailCode, new Object[0], request.getLocale()),
-                List.of()
-            )
-        );
+                messageSource.getMessage(messageCode, null, request.getLocale()),
+                messageSource.getMessage(detailCode, null, request.getLocale()),
+                List.of()));
     }
 
     private boolean hasInvalidAudience(Throwable exception) {
         String invalidAudienceDescription = messageSource.getMessage(
             "security.jwt.invalid_audience.error_description",
-            new Object[0],
-            Locale.ENGLISH
-        );
+            null,
+            Locale.ENGLISH);
 
         for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
             if (cause instanceof JwtValidationException validationException

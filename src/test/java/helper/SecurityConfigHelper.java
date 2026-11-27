@@ -25,7 +25,8 @@ public final class SecurityConfigHelper {
     private SecurityConfigHelper() {
     }
 
-    public static String signedToken(String issuer, List<String> audience, Map<String, Object> realmAccess) {
+    public static String signedToken(
+        String issuer, List<String> audience, Map<String, Object> realmAccess) {
         JWTClaimsSet claims = new JWTClaimsSet.Builder()
             .issuer(issuer)
             .subject("security-test-organizer")
@@ -36,9 +37,10 @@ public final class SecurityConfigHelper {
             .build();
         try {
             SignedJWT jwt = new SignedJWT(
-                new JWSHeader.Builder(JWSAlgorithm.RS256).keyID(SIGNING_KEY.getKeyID()).build(),
-                claims
-            );
+                new JWSHeader.Builder(JWSAlgorithm.RS256)
+                    .keyID(SIGNING_KEY.getKeyID())
+                    .build(),
+                claims);
             jwt.sign(new RSASSASigner(SIGNING_KEY.toPrivateKey()));
             return jwt.serialize();
         } catch (JOSEException exception) {
@@ -57,13 +59,17 @@ public final class SecurityConfigHelper {
     public static HttpServer startJwksServer() {
         try {
             HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
-            byte[] jwks = new JWKSet(SIGNING_KEY.toPublicJWK()).toString().getBytes(StandardCharsets.UTF_8);
-            server.createContext("/jwks", exchange -> {
-                exchange.getResponseHeaders().set("Content-Type", "application/json");
-                exchange.sendResponseHeaders(200, jwks.length);
-                exchange.getResponseBody().write(jwks);
-                exchange.close();
-            });
+            byte[] jwks = new JWKSet(SIGNING_KEY.toPublicJWK())
+                .toString()
+                .getBytes(StandardCharsets.UTF_8);
+            server.createContext(
+                "/jwks",
+                exchange -> {
+                    exchange.getResponseHeaders().set("Content-Type", "application/json");
+                    exchange.sendResponseHeaders(200, jwks.length);
+                    exchange.getResponseBody().write(jwks);
+                    exchange.close();
+                });
             server.start();
             return server;
         } catch (IOException exception) {

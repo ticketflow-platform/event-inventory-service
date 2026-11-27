@@ -25,24 +25,20 @@ public final class EventCategoryMapperTestCases {
                 event,
                 category,
                 now,
-                new EventCategory.EventCategoryId(eventId, categoryId)
-            ),
+                new EventCategory.EventCategoryId(eventId, categoryId)),
             Arguments.of(
                 "Только событие",
                 event,
                 null,
                 now,
-                new EventCategory.EventCategoryId(eventId, null)
-            ),
+                new EventCategory.EventCategoryId(eventId, null)),
             Arguments.of(
                 "Только категория",
                 null,
                 category,
                 now,
-                new EventCategory.EventCategoryId(null, categoryId)
-            ),
-            Arguments.of("Только время", null, null, now, null)
-        );
+                new EventCategory.EventCategoryId(null, categoryId)),
+            Arguments.of("Только время", null, null, now, null));
     }
 
     public static Stream<Arguments> toEntity_whenAllInputsAreNull_thenReturnNullTestCases() {
@@ -70,9 +66,11 @@ public final class EventCategoryMapperTestCases {
         EventCategory link2 = new EventCategory();
         link2.setCategory(category2);
         return Stream.of(
-            Arguments.of("Несколько связей", List.of(link1, link2), List.of(categoryId1, categoryId2)),
+            Arguments.of(
+                "Несколько связей",
+                List.of(link1, link2),
+                List.of(categoryId1, categoryId2)),
             Arguments.of("Нет связей", List.of(), List.of()),
-            Arguments.of("Список связей отсутствует", null, null)
-        );
+            Arguments.of("Список связей отсутствует", null, null));
     }
 }

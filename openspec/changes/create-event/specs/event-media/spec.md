@@ -24,7 +24,7 @@ When a draft request supplies images, exactly one image SHALL have type `COVER`;
 - **THEN** the service SHALL return `400 Bad Request` and SHALL NOT create the event or image links
 
 ### Requirement: Image links retain display position
-An event-image link SHALL support `ImagePosition` values `COVER` and `GALLERY`. In the create response, the `COVER` image SHALL appear before all `GALLERY` images.
+An event-image link SHALL support `ImagePosition` values `COVER` and `GALLERY`. Request and response image objects SHALL expose this value as `position`. In the create response, the `COVER` image SHALL appear before all `GALLERY` images.
 
 #### Scenario: Image is associated with an event
 - **WHEN** an image is linked to an event

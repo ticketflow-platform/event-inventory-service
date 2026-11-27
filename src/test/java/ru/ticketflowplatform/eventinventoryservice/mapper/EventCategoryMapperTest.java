@@ -19,12 +19,11 @@ class EventCategoryMapperTest {
     @MethodSource("scenario.cases.java.mapper.EventCategoryMapperTestCases#toEntity_whenEventAndCategoryAreProvided_thenMapLinkTestCases")
     @DisplayName("Преобразует событие и категорию в связь по сценариям")
     void toEntity_whenEventAndCategoryAreProvided_thenMapLinkTest(
-            String scenario,
-            Event event,
-            Category category,
-            Instant now,
-            EventCategory.EventCategoryId expectedId
-    ) {
+        String scenario,
+        Event event,
+        Category category,
+        Instant now,
+        EventCategory.EventCategoryId expectedId) {
         EventCategory link = eventCategoryMapper.toEntity(event, category, now);
 
         Assertions.assertThat(link.getEventCategoryId()).isEqualTo(expectedId);
@@ -44,10 +43,7 @@ class EventCategoryMapperTest {
     @MethodSource("scenario.cases.java.mapper.EventCategoryMapperTestCases#toCategoryId_whenLinkIsProvided_thenReturnCategoryIdTestCases")
     @DisplayName("Извлекает идентификатор категории по сценариям")
     void toCategoryId_whenLinkIsProvided_thenReturnCategoryIdTest(
-            String scenario,
-            EventCategory link,
-            UUID categoryId
-    ) {
+        String scenario, EventCategory link, UUID categoryId) {
         Assertions.assertThat(eventCategoryMapper.toCategoryId(link)).isEqualTo(categoryId);
     }
 
@@ -55,10 +51,7 @@ class EventCategoryMapperTest {
     @MethodSource("scenario.cases.java.mapper.EventCategoryMapperTestCases#toCategoryIds_whenLinksAreProvided_thenReturnCategoryIdsTestCases")
     @DisplayName("Извлекает идентификаторы категорий по сценариям")
     void toCategoryIds_whenLinksAreProvided_thenReturnCategoryIdsTest(
-            String scenario,
-            List<EventCategory> links,
-            List<UUID> categoryIds
-    ) {
+        String scenario, List<EventCategory> links, List<UUID> categoryIds) {
         Assertions.assertThat(eventCategoryMapper.toCategoryIds(links)).isEqualTo(categoryIds);
     }
 }

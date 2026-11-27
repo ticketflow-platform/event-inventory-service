@@ -26,16 +26,15 @@ class ErrorMapperTest {
         String detail,
         List<FieldErrorResponseDto> errors,
         ErrorResponseDto expected) {
-        Assertions.assertThat(errorMapper.toResponse(status, message, detail, errors)).isEqualTo(expected);
+        Assertions.assertThat(errorMapper.toResponse(status, message, detail, errors))
+            .isEqualTo(expected);
     }
 
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource("scenario.cases.java.mapper.ErrorMapperTestCases#toFieldError_whenFieldErrorIsProvided_thenMapFieldErrorTestCases")
     @DisplayName("Преобразует ошибку поля по сценариям")
     void toFieldError_whenFieldErrorIsProvided_thenMapFieldErrorTest(
-        String scenario,
-        FieldError error,
-        FieldErrorResponseDto expected) {
+        String scenario, FieldError error, FieldErrorResponseDto expected) {
         Assertions.assertThat(errorMapper.toFieldError(error)).isEqualTo(expected);
     }
 }

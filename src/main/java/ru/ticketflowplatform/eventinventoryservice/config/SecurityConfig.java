@@ -21,11 +21,10 @@ import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidatorResult;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtValidators;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
-
 import ru.ticketflowplatform.eventinventoryservice.controller.SecurityExceptionHandler;
 
 @Configuration
@@ -39,39 +38,40 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(
         HttpSecurity http,
-        @Value("${api.urls.health}") String healthPath,
-        @Value("${api.urls.swagger-ui}") String swaggerUiPath,
-        @Value("${api.urls.swagger-ui-entry}") String swaggerUiEntryPath,
-        @Value("${api.urls.openapi-docs}") String openApiDocsPath,
+        @Value("${api.urls.health}")
+        String healthPath,
+        @Value("${api.urls.swagger-ui}")
+        String swaggerUiPath,
+        @Value("${api.urls.swagger-ui-entry}")
+        String swaggerUiEntryPath,
+        @Value("${api.urls.openapi-docs}")
+        String openApiDocsPath,
         SecurityExceptionHandler errorHandlers) {
         return http.csrf(AbstractHttpConfigurer::disable)
-            .exceptionHandling(
-                exceptions -> exceptions
-                    .authenticationEntryPoint(errorHandlers)
-                    .accessDeniedHandler(errorHandlers)
-            )
-            .authorizeHttpRequests(
-                auth -> auth
-                    .requestMatchers(healthPath, healthPath + "/**").permitAll()
-                    .requestMatchers(swaggerUiPath, swaggerUiEntryPath, openApiDocsPath).hasRole("DEVELOPER")
-                    .anyRequest().authenticated()
-            )
-            .oauth2ResourceServer(
-                oauth2 -> oauth2
-                    .authenticationEntryPoint(errorHandlers)
-                    .accessDeniedHandler(errorHandlers)
-                    .jwt(
-                        jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())
-                    )
-            )
+            .exceptionHandling(exceptions -> exceptions
+                .authenticationEntryPoint(errorHandlers)
+                .accessDeniedHandler(errorHandlers))
+            .authorizeHttpRequests(auth -> auth.requestMatchers(healthPath, healthPath + "/**")
+                .permitAll()
+                .requestMatchers(swaggerUiPath, swaggerUiEntryPath, openApiDocsPath)
+                .hasRole("DEVELOPER")
+                .anyRequest()
+                .authenticated())
+            .oauth2ResourceServer(oauth2 -> oauth2.authenticationEntryPoint(errorHandlers)
+                .accessDeniedHandler(errorHandlers)
+                .jwt(jwt -> jwt.jwtAuthenticationConverter(
+                    jwtAuthenticationConverter())))
             .build();
     }
 
     @Bean
     JwtDecoder jwtDecoder(
-        @Value("${security.jwt.jwk-set-uri}") String jwkSetUri,
-        @Value("${security.jwt.issuer}") String issuer,
-        @Value("${security.jwt.audience}") String audience,
+        @Value("${security.jwt.jwk-set-uri}")
+        String jwkSetUri,
+        @Value("${security.jwt.issuer}")
+        String issuer,
+        @Value("${security.jwt.audience}")
+        String audience,
         MessageSource messageSource) {
         NimbusJwtDecoder decoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
         OAuth2TokenValidator<Jwt> issuerValidator = JwtValidators.createDefaultWithIssuer(issuer);
@@ -80,12 +80,11 @@ public class SecurityConfig {
             audience,
             messageSource.getMessage(
                 "security.jwt.invalid_audience.error_description",
-                new Object[0],
-                Locale.ENGLISH
-            )
-        );
+                null,
+                Locale.ENGLISH));
 
-        decoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(issuerValidator, audienceValidator));
+        decoder.setJwtValidator(
+            new DelegatingOAuth2TokenValidator<>(issuerValidator, audienceValidator));
         return decoder;
     }
 
@@ -95,16 +94,12 @@ public class SecurityConfig {
         return converter;
     }
 
-    private OAuth2TokenValidator<Jwt> getAudienceValidator(String audience, String errorDescription) {
+    private OAuth2TokenValidator<Jwt> getAudienceValidator(
+        String audience, String errorDescription) {
         return token -> token.getAudience().contains(audience)
             ? OAuth2TokenValidatorResult.success()
             : OAuth2TokenValidatorResult.failure(
-                new OAuth2Error(
-                    "invalid_token",
-                    errorDescription,
-                    null
-                )
-            );
+                new OAuth2Error("invalid_token", errorDescription, null));
     }
 
     private Converter<Jwt, Collection<GrantedAuthority>> jwtAuthoritiesConverter() {
@@ -116,9 +111,11 @@ public class SecurityConfig {
         };
     }
 
-    private List<GrantedAuthority> enrichAuthority(List<GrantedAuthority> authorities, Map<String, Object> realmAccess) {
+    private List<GrantedAuthority> enrichAuthority(
+        List<GrantedAuthority> authorities, Map<String, Object> realmAccess) {
         if (realmAccess != null && realmAccess.get(ROLES_FIELD) instanceof Collection<?> roles) {
-            roles.stream().map(Object::toString)
+            roles.stream()
+                .map(Object::toString)
                 .map(role -> new SimpleGrantedAuthority(String.format(ROLE_PREFIX, role)))
                 .forEach(authorities::add);
         }

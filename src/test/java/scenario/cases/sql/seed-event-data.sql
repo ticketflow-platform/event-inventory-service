@@ -55,4 +55,12 @@ VALUES
     'image/jpeg',
     2048,
     CURRENT_TIMESTAMP
+  ),
+  (
+    '00000000-0000-0000-0000-000000000015',
+    'organizer-2',
+    'events/foreign.jpg',
+    'image/jpeg',
+    3072,
+    CURRENT_TIMESTAMP
   );

@@ -46,9 +46,7 @@ public final class OpenApiLocalizerTestCases {
                     "Создаёт черновик мероприятия. Обязательно только название. Для каждой логической команды создания используйте новый ключ Idempotency-Key; повтор с тем же ключом и содержимым возвращает первоначальный результат.",
                     "Черновик мероприятия создан",
                     "Название мероприятия. Единственное обязательное поле при создании черновика.",
-                    "Фестиваль"
-                )
-            ),
+                    "Фестиваль")),
             Arguments.of(
                 "Английская локаль",
                 Locale.ENGLISH,
@@ -62,22 +60,25 @@ public final class OpenApiLocalizerTestCases {
                     "Creates an event draft. Only the title is required. Use a new Idempotency-Key for each logical create command; a retry with the same key and body returns the original result.",
                     "Event draft created",
                     "Event title. The only field required to create a draft.",
-                    "Festival"
-                )
-            )
-        );
+                    "Festival")));
     }
 
     public static Stream<Arguments> localize_whenOptionalSectionsAreMissing_thenStillSetInfoTestCases() {
         OpenAPI empty = new OpenAPI();
         OpenAPI operationWithoutOptionalSections = new OpenAPI()
-            .paths(new Paths().addPathItem("/events", new PathItem().post(new Operation())));
+            .paths(
+                new Paths()
+                    .addPathItem(
+                        "/events", new PathItem().post(new Operation())));
         OpenAPI componentsWithoutSchemas = new OpenAPI().components(new Components());
         return Stream.of(
             Arguments.of("Нет разделов", empty, "TicketFlow Events API"),
-            Arguments.of("Есть операция без параметров и ответов", operationWithoutOptionalSections, "TicketFlow Events API"),
-            Arguments.of("Компоненты без схем", componentsWithoutSchemas, "TicketFlow Events API")
-        );
+            Arguments.of(
+                "Есть операция без параметров и ответов",
+                operationWithoutOptionalSections,
+                "TicketFlow Events API"),
+            Arguments.of(
+                "Компоненты без схем", componentsWithoutSchemas, "TicketFlow Events API"));
     }
 
     private OpenApiLocalizerTestCases() {
@@ -93,33 +94,35 @@ public final class OpenApiLocalizerTestCases {
                 List.of(
                     new Tag()
                         .name("i18n:swagger.events.tag.name")
-                        .description("i18n:swagger.events.tag.description")
-                )
-            )
+                        .description(
+                            "i18n:swagger.events.tag.description")))
             .paths(
-                new Paths().addPathItem(
-                    "/api/v1/events",
-                    new PathItem().post(
-                        new Operation()
-                            .summary("i18n:swagger.events.create.summary")
-                            .description("i18n:swagger.events.create.description")
-                            .tags(List.of("i18n:swagger.events.tag.name"))
-                            .responses(
-                                new ApiResponses().addApiResponse(
-                                    "201",
-                                    new ApiResponse().description("i18n:swagger.events.create.response.201")
-                                )
-                            )
-                    )
-                )
-            )
+                new Paths()
+                    .addPathItem(
+                        "/api/v1/events",
+                        new PathItem()
+                            .post(
+                                new Operation()
+                                    .summary(
+                                        "i18n:swagger.events.create.summary")
+                                    .description(
+                                        "i18n:swagger.events.create.description")
+                                    .tags(
+                                        List.of(
+                                            "i18n:swagger.events.tag.name"))
+                                    .responses(
+                                        new ApiResponses()
+                                            .addApiResponse(
+                                                "201",
+                                                new ApiResponse()
+                                                    .description(
+                                                        "i18n:swagger.events.create.response.201"))))))
             .components(
-                new Components().schemas(
-                    Map.of(
-                        "Request",
-                        new ObjectSchema().addProperty("title", title)
-                    )
-                )
-            );
+                new Components()
+                    .schemas(
+                        Map.of(
+                            "Request",
+                            new ObjectSchema()
+                                .addProperty("title", title))));
     };
 }

@@ -1,14 +1,14 @@
 package scenario.cases.java.service;
 
-import java.time.Instant;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-import org.junit.jupiter.params.provider.Arguments;
 import org.hibernate.exception.ConstraintViolationException;
+import org.junit.jupiter.params.provider.Arguments;
 import org.springframework.dao.DataIntegrityViolationException;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.dto.in.CreateEventRequestDto;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.dto.in.CreateEventRequestDto.CategoryRequestDto;
@@ -19,8 +19,8 @@ import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.Event;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.EventImage;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.IdempotencyKey;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.Image;
-import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.EventStatus;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.CategoryStatus;
+import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.EventStatus;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.ImagePosition;
 
 public final class EventServiceTestCases {
@@ -49,13 +49,19 @@ public final class EventServiceTestCases {
                         ImagePosition.GALLERY,
                         now,
                         event,
-                        otherGallery
-                    ),
-                    new EventImage(new EventImage.EventImageId(eventId, cover.getId()), ImagePosition.COVER, now, event, cover),
-                    new EventImage(new EventImage.EventImageId(eventId, gallery.getId()), ImagePosition.GALLERY, now, event, gallery)
-                )
-            )
-        );
+                        otherGallery),
+                    new EventImage(
+                        new EventImage.EventImageId(eventId, cover.getId()),
+                        ImagePosition.COVER,
+                        now,
+                        event,
+                        cover),
+                    new EventImage(
+                        new EventImage.EventImageId(eventId, gallery.getId()),
+                        ImagePosition.GALLERY,
+                        now,
+                        event,
+                        gallery))));
         IdempotencyKey key = new IdempotencyKey();
         key.setRequestHash("fingerprint");
         key.setEvent(event);
@@ -66,10 +72,8 @@ public final class EventServiceTestCases {
             List.of(
                 new ImageRequestDto(otherGallery.getId(), ImagePosition.GALLERY),
                 new ImageRequestDto(cover.getId(), ImagePosition.COVER),
-                new ImageRequestDto(gallery.getId(), ImagePosition.GALLERY)
-            ),
-            null
-        );
+                new ImageRequestDto(gallery.getId(), ImagePosition.GALLERY)),
+            null);
         CreateEventResponseDto expected = new CreateEventResponseDto(
             eventId,
             "organizer-1",
@@ -77,19 +81,22 @@ public final class EventServiceTestCases {
             null,
             List.of(),
             List.of(
-                new CreateEventResponseDto.EventImageResponseDto(cover.getId(), ImagePosition.COVER, now),
-                new CreateEventResponseDto.EventImageResponseDto(gallery.getId(), ImagePosition.GALLERY, now),
-                new CreateEventResponseDto.EventImageResponseDto(otherGallery.getId(), ImagePosition.GALLERY, now)
-            ),
+                new CreateEventResponseDto.EventImageResponseDto(
+                    cover.getId(), ImagePosition.COVER, now),
+                new CreateEventResponseDto.EventImageResponseDto(
+                    otherGallery.getId(), ImagePosition.GALLERY, now),
+                new CreateEventResponseDto.EventImageResponseDto(
+                    gallery.getId(), ImagePosition.GALLERY, now)),
             null,
             EventStatus.DRAFT,
             now,
             now,
             null,
             null,
-            null
-        );
-        return Stream.of(Arguments.of("Обложка первая, галерея отсортирована по id", request, key, expected));
+            null);
+        return Stream.of(
+            Arguments.of(
+                "Обложка первая, галерея не сортируется по id", request, key, expected));
     }
 
     public static Stream<Arguments> create_whenStoredKeyMatchesRequest_thenReturnStoredResponseTestCases() {
@@ -100,8 +107,7 @@ public final class EventServiceTestCases {
             null,
             List.of(new CategoryRequestDto(categoryId)),
             List.of(new ImageRequestDto(imageId, ImagePosition.COVER)),
-            0
-        );
+            0);
         Event event = new Event();
         event.setId(new UUID(0, 1));
         event.setOrganizerId("organizer-1");
@@ -120,15 +126,16 @@ public final class EventServiceTestCases {
             "Concert",
             null,
             List.of(categoryId),
-            List.of(new CreateEventResponseDto.EventImageResponseDto(imageId, ImagePosition.COVER, now)),
+            List.of(
+                new CreateEventResponseDto.EventImageResponseDto(
+                    imageId, ImagePosition.COVER, now)),
             0,
             EventStatus.DRAFT,
             now,
             now,
             null,
             null,
-            null
-        );
+            null);
         return Stream.of(Arguments.of("Идемпотентный повтор", request, key, response));
     }
 
@@ -150,8 +157,7 @@ public final class EventServiceTestCases {
             null,
             List.of(new CategoryRequestDto(new UUID(0, 2))),
             List.of(new ImageRequestDto(new UUID(0, 3), ImagePosition.COVER)),
-            0
-        );
+            0);
         IdempotencyKey key = new IdempotencyKey();
         key.setRequestHash("previous-fingerprint");
         return Stream.of(Arguments.of("Другой отпечаток запроса", request, key));
@@ -163,20 +169,31 @@ public final class EventServiceTestCases {
         return Stream.of(
             Arguments.of(
                 "Отрицательное значение",
-                new CreateEventRequestDto("Concert", null, List.of(new CategoryRequestDto(categoryId)), images, -1),
-                -1
-            ),
+                new CreateEventRequestDto(
+                    "Concert",
+                    null,
+                    List.of(new CategoryRequestDto(categoryId)),
+                    images,
+                    -1),
+                -1),
             Arguments.of(
                 "Значение между поддерживаемыми",
-                new CreateEventRequestDto("Concert", null, List.of(new CategoryRequestDto(categoryId)), images, 7),
-                7
-            ),
+                new CreateEventRequestDto(
+                    "Concert",
+                    null,
+                    List.of(new CategoryRequestDto(categoryId)),
+                    images,
+                    7),
+                7),
             Arguments.of(
                 "Значение выше поддерживаемого",
-                new CreateEventRequestDto("Concert", null, List.of(new CategoryRequestDto(categoryId)), images, 20),
-                20
-            )
-        );
+                new CreateEventRequestDto(
+                    "Concert",
+                    null,
+                    List.of(new CategoryRequestDto(categoryId)),
+                    images,
+                    20),
+                20));
     }
 
     public static Stream<Arguments> create_whenImageListDoesNotHaveExactlyOneCover_thenRejectRequestTestCases() {
@@ -184,8 +201,12 @@ public final class EventServiceTestCases {
         return Stream.of(
             Arguments.of(
                 "Только галерея",
-                new CreateEventRequestDto("Concert", null, null, List.of(new ImageRequestDto(galleryId, ImagePosition.GALLERY)), null)
-            ),
+                new CreateEventRequestDto(
+                    "Concert",
+                    null,
+                    null,
+                    List.of(new ImageRequestDto(galleryId, ImagePosition.GALLERY)),
+                    null)),
             Arguments.of(
                 "Две обложки",
                 new CreateEventRequestDto(
@@ -194,12 +215,8 @@ public final class EventServiceTestCases {
                     null,
                     List.of(
                         new ImageRequestDto(new UUID(0, 3), ImagePosition.COVER),
-                        new ImageRequestDto(new UUID(0, 4), ImagePosition.COVER)
-                    ),
-                    null
-                )
-            )
-        );
+                        new ImageRequestDto(new UUID(0, 4), ImagePosition.COVER)),
+                    null)));
     }
 
     public static Stream<Arguments> create_whenCategoryIdsContainDuplicates_thenRejectRequestTestCases() {
@@ -210,12 +227,11 @@ public final class EventServiceTestCases {
                 new CreateEventRequestDto(
                     "Concert",
                     null,
-                    List.of(new CategoryRequestDto(categoryId), new CategoryRequestDto(categoryId)),
+                    List.of(
+                        new CategoryRequestDto(categoryId),
+                        new CategoryRequestDto(categoryId)),
                     List.of(new ImageRequestDto(new UUID(0, 3), ImagePosition.COVER)),
-                    0
-                )
-            )
-        );
+                    0)));
     }
 
     public static Stream<Arguments> create_whenImageIdsContainDuplicates_thenRejectRequestTestCases() {
@@ -224,9 +240,12 @@ public final class EventServiceTestCases {
         return Stream.of(
             Arguments.of(
                 "Одно изображение указано дважды",
-                new CreateEventRequestDto("Concert", null, List.of(new CategoryRequestDto(new UUID(0, 2))), List.of(image, image), 0)
-            )
-        );
+                new CreateEventRequestDto(
+                    "Concert",
+                    null,
+                    List.of(new CategoryRequestDto(new UUID(0, 2))),
+                    List.of(image, image),
+                    0)));
     }
 
     public static Stream<Arguments> create_whenCategoryIsMissingOrInactive_thenRejectRequestTestCases() {
@@ -236,25 +255,31 @@ public final class EventServiceTestCases {
             null,
             List.of(new CategoryRequestDto(categoryId)),
             List.of(new ImageRequestDto(new UUID(0, 3), ImagePosition.COVER)),
-            0
-        );
+            0);
         CreateEventRequestDto requestWithMultipleCategories = new CreateEventRequestDto(
             "Concert",
             null,
-            List.of(new CategoryRequestDto(categoryId), new CategoryRequestDto(new UUID(0, 2))),
+            List.of(
+                new CategoryRequestDto(categoryId),
+                new CategoryRequestDto(new UUID(0, 2))),
             request.images(),
-            0
-        );
+            0);
         return Stream.of(
-            Arguments.of("Категория неизвестна", request, List.of(), "api.event.categories.not_found.message.one"),
-            Arguments.of("Активная категория не найдена", request, List.of(), "api.event.categories.not_found.message.one"),
+            Arguments.of(
+                "Категория неизвестна",
+                request,
+                List.of(),
+                "api.event.categories.not_found.message.one"),
+            Arguments.of(
+                "Активная категория не найдена",
+                request,
+                List.of(),
+                "api.event.categories.not_found.message.one"),
             Arguments.of(
                 "Несколько категорий неизвестны",
                 requestWithMultipleCategories,
                 List.of(),
-                "api.event.categories.not_found.message.many"
-            )
-        );
+                "api.event.categories.not_found.message.many"));
     }
 
     public static Stream<Arguments> create_whenImageIsMissingOrForeign_thenRejectRequestTestCases() {
@@ -265,8 +290,7 @@ public final class EventServiceTestCases {
             null,
             List.of(new CategoryRequestDto(categoryId)),
             List.of(new ImageRequestDto(imageId, ImagePosition.COVER)),
-            0
-        );
+            0);
         Category category = new Category();
         category.setId(categoryId);
         category.setStatus(CategoryStatus.ACTIVE);
@@ -277,33 +301,27 @@ public final class EventServiceTestCases {
             request.categoryIds(),
             List.of(
                 new ImageRequestDto(imageId, ImagePosition.COVER),
-                new ImageRequestDto(new UUID(0, 4), ImagePosition.GALLERY)
-            ),
-            0
-        );
+                new ImageRequestDto(new UUID(0, 4), ImagePosition.GALLERY)),
+            0);
         return Stream.of(
             Arguments.of(
                 "Изображение неизвестно",
                 request,
                 foundCategories,
                 List.of(),
-                "api.event.images.not_found.message.one"
-            ),
+                "api.event.images.not_found.message.one"),
             Arguments.of(
                 "Изображение принадлежит другому организатору",
                 request,
                 foundCategories,
                 List.of(),
-                "api.event.images.not_found.message.one"
-            ),
+                "api.event.images.not_found.message.one"),
             Arguments.of(
                 "Несколько изображений неизвестны",
                 requestWithMultipleImages,
                 foundCategories,
                 List.of(),
-                "api.event.images.not_found.message.many"
-            )
-        );
+                "api.event.images.not_found.message.many"));
     }
 
     public static Stream<Arguments> create_whenOnlyTitleIsProvided_thenCreateDraftTestCases() {
@@ -325,11 +343,8 @@ public final class EventServiceTestCases {
             now,
             null,
             null,
-            null
-        );
-        return Stream.of(
-            Arguments.of("Черновик только с названием", request, event, expected)
-        );
+            null);
+        return Stream.of(Arguments.of("Черновик только с названием", request, event, expected));
     }
 
     public static Stream<Arguments> create_whenReferencesAreValid_thenAttachAllLinksToEventTestCases() {
@@ -352,10 +367,11 @@ public final class EventServiceTestCases {
         CreateEventRequestDto populatedRequest = new CreateEventRequestDto(
             "Festival",
             "Live",
-            categories.stream().map(category -> new CategoryRequestDto(category.getId())).toList(),
+            categories.stream()
+                .map(category -> new CategoryRequestDto(category.getId()))
+                .toList(),
             List.of(imageRequest),
-            16
-        );
+            16);
         Event populatedEvent = new Event();
         populatedEvent.setId(new UUID(0, 1001));
         populatedEvent.setEventCategories(new java.util.ArrayList<>());
@@ -366,15 +382,16 @@ public final class EventServiceTestCases {
             "Festival",
             "Live",
             categoryIds,
-            List.of(new CreateEventResponseDto.EventImageResponseDto(imageId, ImagePosition.COVER, now)),
+            List.of(
+                new CreateEventResponseDto.EventImageResponseDto(
+                    imageId, ImagePosition.COVER, now)),
             16,
             EventStatus.DRAFT,
             now,
             now,
             null,
             null,
-            null
-        );
+            null);
 
         return Stream.of(
             Arguments.of(
@@ -386,9 +403,7 @@ public final class EventServiceTestCases {
                 List.of(image),
                 categories.size(),
                 1,
-                populatedResponse
-            )
-        );
+                populatedResponse));
     }
 
     public static Stream<Arguments> create_whenIdempotencyKeyUniqueConstraintConflicts_thenReturn409TestCases() {
@@ -406,12 +421,8 @@ public final class EventServiceTestCases {
                     new ConstraintViolationException(
                         "Constraint violation",
                         new SQLException("Constraint violation"),
-                        "uq_idempotency_organizer_key"
-                    )
-                ),
-                409
-            )
-        );
+                        "uq_idempotency_organizer_key")),
+                409));
     }
 
     public static Stream<Arguments> create_whenAnotherConstraintFails_thenRethrowDatabaseErrorTestCases() {
@@ -429,10 +440,6 @@ public final class EventServiceTestCases {
                     new ConstraintViolationException(
                         "Constraint violation",
                         new SQLException("Constraint violation"),
-                        "events_images_image_id_fkey"
-                    )
-                )
-            )
-        );
+                        "events_images_image_id_fkey"))));
     }
 }

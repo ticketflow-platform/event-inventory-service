@@ -16,6 +16,7 @@ buildscript {
 plugins {
     java
     jacoco
+    id("com.diffplug.spotless") version "8.12.0"
 }
 
 apply(plugin = "org.springframework.boot")
@@ -37,6 +38,29 @@ java {
 
 repositories {
     mavenCentral()
+}
+
+spotless {
+    java {
+        target("src/*/java/**/*.java")
+        eclipse("4.41").configProperties("""
+            org.eclipse.jdt.core.formatter.tabulation.char=space
+            org.eclipse.jdt.core.formatter.tabulation.size=4
+            org.eclipse.jdt.core.formatter.indentation.size=4
+            org.eclipse.jdt.core.formatter.continuation_indentation=1
+            org.eclipse.jdt.core.formatter.continuation_indentation_for_array_initializer=1
+            org.eclipse.jdt.core.formatter.lineSplit=120
+            org.eclipse.jdt.core.formatter.join_wrapped_lines=false
+            org.eclipse.jdt.core.formatter.insert_new_line_after_annotation_on_parameter=insert
+            org.eclipse.jdt.core.formatter.insert_new_line_after_annotation_on_method=insert
+            org.eclipse.jdt.core.formatter.alignment_for_annotations_on_parameter=49
+            org.eclipse.jdt.core.formatter.alignment_for_arguments_in_annotation=16
+            org.eclipse.jdt.core.formatter.number_of_empty_lines_to_preserve=1
+            org.eclipse.jdt.core.formatter.insert_space_before_opening_brace_in_array_initializer=insert
+            org.eclipse.jdt.core.formatter.insert_space_after_opening_brace_in_array_initializer=insert
+            org.eclipse.jdt.core.formatter.insert_space_before_closing_brace_in_array_initializer=insert
+        """.trimIndent())
+    }
 }
 
 dependencies {

@@ -9,6 +9,7 @@ import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.validation.method.MethodValidationResult;
 import org.springframework.validation.method.ParameterValidationResult;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -17,7 +18,6 @@ import org.springframework.web.method.annotation.HandlerMethodValidationExceptio
 import org.springframework.web.servlet.HandlerExceptionResolver;
 import org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import ru.ticketflowplatform.eventinventoryservice.controller.EventController;
 import ru.ticketflowplatform.eventinventoryservice.controller.GlobalExceptionHandler;
 import ru.ticketflowplatform.eventinventoryservice.mapper.ErrorMapperImpl;
@@ -30,9 +30,11 @@ public final class ExceptionHandlerTestHelper {
 
     public static HandlerExceptionResolver globalResolver() {
         StaticApplicationContext context = new StaticApplicationContext();
-        context.getBeanFactory().registerSingleton(
-            "globalExceptionHandler", new GlobalExceptionHandler(new ErrorMapperImpl(), TestMessageSources.i18n())
-        );
+        context.getBeanFactory()
+            .registerSingleton(
+                "globalExceptionHandler",
+                new GlobalExceptionHandler(
+                    new ErrorMapperImpl(), TestMessageSources.i18n()));
         ExceptionHandlerExceptionResolver resolver = new ExceptionHandlerExceptionResolver();
         resolver.setApplicationContext(context);
         resolver.setMessageConverters(List.of(new JacksonJsonHttpMessageConverter()));
@@ -48,14 +50,18 @@ public final class ExceptionHandlerTestHelper {
     }
 
     public static MethodParameter eventParameter(int index) {
-        RequestMappingHandlerMapping mapping = MockMvcBuilders
-            .standaloneSetup(new EventController(Mockito.mock(EventService.class)))
+        RequestMappingHandlerMapping mapping = MockMvcBuilders.standaloneSetup(
+            new EventController(Mockito.mock(EventService.class)))
             .addPlaceholderValue("api.urls.v1.event", "/api/v1/events")
-            .build().getDispatcherServlet().getWebApplicationContext()
+            .build()
+            .getDispatcherServlet()
+            .getWebApplicationContext()
             .getBean(RequestMappingHandlerMapping.class);
         return mapping.getHandlerMethods().values().stream()
             .filter(handler -> handler.getBeanType().equals(EventController.class))
-            .findFirst().orElseThrow().getMethodParameters()[index];
+            .findFirst()
+            .orElseThrow()
+            .getMethodParameters()[index];
     }
 
     public static HandlerMethodValidationException methodValidation(
@@ -76,8 +82,7 @@ public final class ExceptionHandlerTestHelper {
             Mockito.when(parameter.getParameterAnnotation(RequestParam.class)).thenReturn(query);
         }
         ParameterValidationResult parameterResult = new ParameterValidationResult(
-            parameter, " ", errors, null, null, null, (error, type) -> error
-        );
+            parameter, " ", errors, null, null, null, (error, type) -> error);
         MethodValidationResult result = Mockito.mock(MethodValidationResult.class);
         Mockito.when(result.getParameterValidationResults()).thenReturn(List.of(parameterResult));
         return new HandlerMethodValidationException(result);

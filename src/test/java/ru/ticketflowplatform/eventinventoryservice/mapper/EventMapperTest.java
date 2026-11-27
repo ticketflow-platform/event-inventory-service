@@ -12,10 +12,8 @@ import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums.Eve
 
 class EventMapperTest {
 
-    private final EventMapper eventMapper = new EventMapperImpl(
-        new EventCategoryMapperImpl(),
-        new EventImageMapperImpl()
-    );
+    private final EventMapper eventMapper = new EventMapperImpl(new EventCategoryMapperImpl(),
+        new EventImageMapperImpl());
 
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource({
@@ -59,10 +57,9 @@ class EventMapperTest {
     @MethodSource("scenario.cases.java.mapper.EventMapperTestCases#toResponse_whenEventHasLinks_thenMapResponseTestCases")
     @DisplayName("Преобразует событие в ответ по сценариям")
     void toResponse_whenEventHasLinks_thenMapResponseTest(
-        String scenario,
-        Event event,
-        CreateEventResponseDto expected) {
-        Assertions.assertThat(eventMapper.toResponse(event, event.getEventImages())).isEqualTo(expected);
+        String scenario, Event event, CreateEventResponseDto expected) {
+        Assertions.assertThat(eventMapper.toResponse(event, event.getEventImages()))
+            .isEqualTo(expected);
     }
 
     @ParameterizedTest(name = "{index}: {0}")

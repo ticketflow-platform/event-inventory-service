@@ -23,15 +23,15 @@ class EventImageMapperTest {
         String scenario,
         Event event,
         Image image,
-        ImagePosition type,
+        ImagePosition position,
         Instant now,
         EventImage.EventImageId expectedId) {
-        EventImage link = eventImageMapper.toEntity(event, image, type, now);
+        EventImage link = eventImageMapper.toEntity(event, image, position, now);
 
         Assertions.assertThat(link.getEventImageId()).isEqualTo(expectedId);
         Assertions.assertThat(link.getEvent()).isSameAs(event);
         Assertions.assertThat(link.getImage()).isSameAs(image);
-        Assertions.assertThat(link.getType()).isEqualTo(type);
+        Assertions.assertThat(link.getPosition()).isEqualTo(position);
         Assertions.assertThat(link.getCreatedAt()).isEqualTo(now);
     }
 
@@ -46,9 +46,7 @@ class EventImageMapperTest {
     @MethodSource("scenario.cases.java.mapper.EventImageMapperTestCases#toResponse_whenValidLinkIsProvided_thenMapResponseTestCases")
     @DisplayName("Преобразует связь изображения в ответ")
     void toResponse_whenValidLinkIsProvided_thenMapResponseTest(
-        String scenario,
-        EventImage link,
-        EventImageResponseDto expected) {
+        String scenario, EventImage link, EventImageResponseDto expected) {
         Assertions.assertThat(eventImageMapper.toResponse(link)).isEqualTo(expected);
     }
 
@@ -56,9 +54,7 @@ class EventImageMapperTest {
     @MethodSource("scenario.cases.java.mapper.EventImageMapperTestCases#toResponses_whenLinksAreProvided_thenPreserveOrderTestCases")
     @DisplayName("Преобразует изображения без изменения порядка")
     void toResponses_whenLinksAreProvided_thenPreserveOrderTest(
-        String scenario,
-        List<EventImage> links,
-        List<EventImageResponseDto> expected) {
+        String scenario, List<EventImage> links, List<EventImageResponseDto> expected) {
         Assertions.assertThat(eventImageMapper.toResponses(links)).isEqualTo(expected);
     }
 }

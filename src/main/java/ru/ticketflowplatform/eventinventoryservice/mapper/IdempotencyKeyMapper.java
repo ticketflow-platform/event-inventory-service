@@ -16,5 +16,6 @@ public interface IdempotencyKeyMapper {
     @Mapping(target = "requestHash", source = "requestHash")
     @Mapping(target = "event", source = "event")
     @Mapping(target = "createdAt", source = "now")
-    IdempotencyKey toEntity(String organizerId, String key, String requestHash, Event event, Instant now);
+    IdempotencyKey toEntity(
+        String organizerId, String key, String requestHash, Event event, Instant now);
 }

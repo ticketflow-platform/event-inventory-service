@@ -5,6 +5,7 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Stream;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -18,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
-import lombok.RequiredArgsConstructor;
 import ru.ticketflowplatform.eventinventoryservice.domain.exception.EventNotFoundException;
 import ru.ticketflowplatform.eventinventoryservice.domain.exception.HashGenerationException;
 import ru.ticketflowplatform.eventinventoryservice.domain.exception.IdempotencyConflictException;
@@ -40,10 +40,11 @@ public class GlobalExceptionHandler {
     ErrorResponseDto validation(MethodArgumentNotValidException exception, Locale locale) {
         return errorMapper.toResponse(
             HttpStatus.BAD_REQUEST.value(),
-            messageSource.getMessage("api.error.bad_request.message", new Object[0], locale),
-            messageSource.getMessage("api.error.validation.detail", new Object[0], locale),
-            exception.getBindingResult().getFieldErrors().stream().map(errorMapper::toFieldError).toList()
-        );
+            messageSource.getMessage("api.error.bad_request.message", null, locale),
+            messageSource.getMessage("api.error.validation.detail", null, locale),
+            exception.getBindingResult().getFieldErrors().stream()
+                .map(errorMapper::toFieldError)
+                .toList());
     }
 
     @ExceptionHandler(HandlerMethodValidationException.class)
@@ -51,10 +52,9 @@ public class GlobalExceptionHandler {
     ErrorResponseDto methodValidation(HandlerMethodValidationException exception, Locale locale) {
         return errorMapper.toResponse(
             HttpStatus.BAD_REQUEST.value(),
-            messageSource.getMessage("api.error.bad_request.message", new Object[0], locale),
-            messageSource.getMessage("api.error.validation.detail", new Object[0], locale),
-            prepareErrors(exception, locale)
-        );
+            messageSource.getMessage("api.error.bad_request.message", null, locale),
+            messageSource.getMessage("api.error.validation.detail", null, locale),
+            prepareErrors(exception, locale));
     }
 
     @ExceptionHandler(MissingRequestHeaderException.class)
@@ -62,14 +62,12 @@ public class GlobalExceptionHandler {
     ErrorResponseDto missingHeader(MissingRequestHeaderException exception, Locale locale) {
         return errorMapper.toResponse(
             HttpStatus.BAD_REQUEST.value(),
-            messageSource.getMessage("api.error.bad_request.message", new Object[0], locale),
+            messageSource.getMessage("api.error.bad_request.message", null, locale),
             messageSource.getMessage(
                 "api.error.header_missing.detail",
                 new Object[] { exception.getHeaderName() },
-                locale
-            ),
-            List.of()
-        );
+                locale),
+            List.of());
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
@@ -77,10 +75,9 @@ public class GlobalExceptionHandler {
     ErrorResponseDto unreadableRequest(Locale locale) {
         return errorMapper.toResponse(
             HttpStatus.BAD_REQUEST.value(),
-            messageSource.getMessage("api.error.bad_request.message", new Object[0], locale),
-            messageSource.getMessage("api.error.body_malformed.detail", new Object[0], locale),
-            List.of()
-        );
+            messageSource.getMessage("api.error.bad_request.message", null, locale),
+            messageSource.getMessage("api.error.body_malformed.detail", null, locale),
+            List.of());
     }
 
     @ExceptionHandler(InvalidEventReferenceException.class)
@@ -88,10 +85,15 @@ public class GlobalExceptionHandler {
     ErrorResponseDto invalidReference(InvalidEventReferenceException exception, Locale locale) {
         return errorMapper.toResponse(
             exception.getStatus(),
-            messageSource.getMessage(exception.getMessageCode(), exception.getArguments(), locale),
-            messageSource.getMessage(exception.getDetailCode(), exception.getArguments(), locale),
-            exception.getErrors()
-        );
+            messageSource.getMessage(
+                exception.getMessageCode(),
+                exception.getArguments(),
+                locale),
+            messageSource.getMessage(
+                exception.getDetailCode(),
+                exception.getArguments(),
+                locale),
+            exception.getErrors());
     }
 
     @ExceptionHandler(InvalidEventRequestException.class)
@@ -99,10 +101,15 @@ public class GlobalExceptionHandler {
     ErrorResponseDto invalidRequest(InvalidEventRequestException exception, Locale locale) {
         return errorMapper.toResponse(
             exception.getStatus(),
-            messageSource.getMessage(exception.getMessageCode(), exception.getArguments(), locale),
-            messageSource.getMessage(exception.getDetailCode(), exception.getArguments(), locale),
-            exception.getErrors()
-        );
+            messageSource.getMessage(
+                exception.getMessageCode(),
+                exception.getArguments(),
+                locale),
+            messageSource.getMessage(
+                exception.getDetailCode(),
+                exception.getArguments(),
+                locale),
+            exception.getErrors());
     }
 
     @ExceptionHandler(IdempotencyConflictException.class)
@@ -110,10 +117,15 @@ public class GlobalExceptionHandler {
     ErrorResponseDto idempotencyConflict(IdempotencyConflictException exception, Locale locale) {
         return errorMapper.toResponse(
             exception.getStatus(),
-            messageSource.getMessage(exception.getMessageCode(), exception.getArguments(), locale),
-            messageSource.getMessage(exception.getDetailCode(), exception.getArguments(), locale),
-            exception.getErrors()
-        );
+            messageSource.getMessage(
+                exception.getMessageCode(),
+                exception.getArguments(),
+                locale),
+            messageSource.getMessage(
+                exception.getDetailCode(),
+                exception.getArguments(),
+                locale),
+            exception.getErrors());
     }
 
     @ExceptionHandler(EventNotFoundException.class)
@@ -121,10 +133,15 @@ public class GlobalExceptionHandler {
     ErrorResponseDto eventNotFound(EventNotFoundException exception, Locale locale) {
         return errorMapper.toResponse(
             exception.getStatus(),
-            messageSource.getMessage(exception.getMessageCode(), exception.getArguments(), locale),
-            messageSource.getMessage(exception.getDetailCode(), exception.getArguments(), locale),
-            exception.getErrors()
-        );
+            messageSource.getMessage(
+                exception.getMessageCode(),
+                exception.getArguments(),
+                locale),
+            messageSource.getMessage(
+                exception.getDetailCode(),
+                exception.getArguments(),
+                locale),
+            exception.getErrors());
     }
 
     @ExceptionHandler(HashGenerationException.class)
@@ -132,26 +149,34 @@ public class GlobalExceptionHandler {
     ErrorResponseDto hashGenerationFailure(HashGenerationException exception, Locale locale) {
         return errorMapper.toResponse(
             exception.getStatus(),
-            messageSource.getMessage(exception.getMessageCode(), exception.getArguments(), locale),
-            messageSource.getMessage(exception.getDetailCode(), exception.getArguments(), locale),
-            exception.getErrors()
-        );
+            messageSource.getMessage(
+                exception.getMessageCode(),
+                exception.getArguments(),
+                locale),
+            messageSource.getMessage(
+                exception.getDetailCode(),
+                exception.getArguments(),
+                locale),
+            exception.getErrors());
     }
 
-    private List<FieldErrorResponseDto> prepareErrors(HandlerMethodValidationException exception, Locale locale) {
+    private List<FieldErrorResponseDto> prepareErrors(
+        HandlerMethodValidationException exception,
+        Locale locale) {
         return exception.getParameterValidationResults().stream()
             .flatMap(toFieldError(locale))
             .toList();
     }
 
-    private Function<? super ParameterValidationResult, ? extends Stream<? extends FieldErrorResponseDto>> toFieldError(Locale locale) {
+    private Function<? super ParameterValidationResult, ? extends Stream<? extends FieldErrorResponseDto>> toFieldError(
+        Locale locale) {
         return result -> result.getResolvableErrors().stream()
             .map(
                 error -> new ErrorResponseDto.FieldErrorResponseDto(
-                    error instanceof FieldError fieldError ? fieldError.getField() : parameterName(result),
-                    messageSource.getMessage(error, locale)
-                )
-            );
+                    error instanceof FieldError fieldError
+                        ? fieldError.getField()
+                        : parameterName(result),
+                    messageSource.getMessage(error, locale)));
     }
 
     private String parameterName(ParameterValidationResult result) {

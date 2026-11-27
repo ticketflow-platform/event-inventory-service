@@ -11,10 +11,8 @@ import ru.ticketflowplatform.eventinventoryservice.domain.model.dto.out.CreateEv
 import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.Event;
 import ru.ticketflowplatform.eventinventoryservice.domain.model.entity.EventImage;
 
-@Mapper(
-    componentModel = ComponentModel.SPRING,
-    injectionStrategy = InjectionStrategy.CONSTRUCTOR,
-    uses = { EventCategoryMapper.class, EventImageMapper.class })
+@Mapper(componentModel = ComponentModel.SPRING, injectionStrategy = InjectionStrategy.CONSTRUCTOR, uses = {
+    EventCategoryMapper.class, EventImageMapper.class })
 public interface EventMapper {
 
     @Mapping(target = "id", ignore = true)
@@ -30,7 +28,8 @@ public interface EventMapper {
     @Mapping(target = "publishedAt", ignore = true)
     @Mapping(target = "cancelledAt", ignore = true)
     @Mapping(target = "completedAt", ignore = true)
-    Event toEntity(CreateEventRequestDto request, String organizerId, Integer ageRestriction, Instant now);
+    Event toEntity(
+        CreateEventRequestDto request, String organizerId, Integer ageRestriction, Instant now);
 
     @Mapping(target = "categoryIds", source = "event.eventCategories")
     @Mapping(target = "images", source = "eventImages")

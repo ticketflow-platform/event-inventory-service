@@ -1,20 +1,30 @@
 package ru.ticketflowplatform.eventinventoryservice.util;
 
 import java.util.Collection;
-import java.util.function.Function;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
+import java.util.function.Predicate;
+import java.util.stream.Collector;
+import java.util.stream.Stream;
+import lombok.Generated;
 
 public final class CollectionUtil {
 
-    @lombok.Generated
+    @Generated
     private CollectionUtil() {
     }
 
-    public static <T, R, C extends Collection<R>> C mapOrEmpty(
+    public static <T, A, R> R collectOrEmpty(
         Collection<T> source,
-        Function<? super T, ? extends R> rule,
-        Supplier<C> collectionFactory) {
-        return source == null ? collectionFactory.get() : source.stream().map(rule).collect(Collectors.toCollection(collectionFactory));
+        Collector<? super T, A, R> collector) {
+        return (source == null ? Stream.<T>empty() : source.stream()).collect(collector);
+    }
+
+    public static <T, A, R> R filterDistinctOrEmpty(
+        Collection<T> source,
+        Predicate<? super T> rule,
+        Collector<? super T, A, R> collector) {
+        return (source == null ? Stream.<T>empty() : source.stream())
+            .filter(rule)
+            .distinct()
+            .collect(collector);
     }
 }

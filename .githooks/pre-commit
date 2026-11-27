@@ -1,0 +1,16 @@
+#!/bin/sh
+set -eu
+
+cd "$(git rev-parse --show-toplevel)"
+
+if ! git diff --quiet -- '*.java'; then
+    echo "Unstaged Java changes found. Stage them or set them aside before committing." >&2
+    exit 1
+fi
+
+gradle spotlessApply --quiet
+
+if ! git diff --quiet -- '*.java'; then
+    echo "Spotless formatted Java files. Review the changes, stage them and commit again." >&2
+    exit 1
+fi

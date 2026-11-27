@@ -13,7 +13,9 @@ public class OpenApiLocaleConfig {
 
     private final String openApiPath;
 
-    OpenApiLocaleConfig(@Value("${api.urls.openapi}") String openApiPath) {
+    OpenApiLocaleConfig(
+        @Value("${api.urls.openapi}")
+        String openApiPath) {
         this.openApiPath = openApiPath;
     }
 
@@ -27,8 +29,7 @@ public class OpenApiLocaleConfig {
         return localizedGroup(
             I18N.RUSSIAN_LANGUAGE_TAG,
             Locale.forLanguageTag(I18N.RUSSIAN_LANGUAGE_TAG),
-            localizer
-        );
+            localizer);
     }
 
     @Bean
@@ -37,7 +38,10 @@ public class OpenApiLocaleConfig {
     }
 
     private GroupedOpenApi localizedGroup(String name, Locale locale, OpenApiLocalizer localizer) {
-        return GroupedOpenApi.builder().group(name).pathsToMatch(openApiPath)
-            .addOpenApiCustomizer(openApi -> localizer.localize(openApi, locale)).build();
+        return GroupedOpenApi.builder()
+            .group(name)
+            .pathsToMatch(openApiPath)
+            .addOpenApiCustomizer(openApi -> localizer.localize(openApi, locale))
+            .build();
     }
 }

@@ -5,7 +5,8 @@ import org.springframework.http.HttpStatus;
 
 public class InvalidEventRequestException extends ErrorResponseException {
 
-    public InvalidEventRequestException(String messageCode, String detailCode, Object... arguments) {
+    public InvalidEventRequestException(
+        String messageCode, String detailCode, Object... arguments) {
         super(HttpStatus.BAD_REQUEST.value(), messageCode, detailCode, List.of(), arguments);
     }
 }

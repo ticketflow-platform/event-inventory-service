@@ -14,6 +14,7 @@ public enum AgeRestriction {
     }
 
     public static boolean isSupport(Integer value) {
-        return value != null && Arrays.stream(values()).anyMatch(restriction -> restriction.value == value);
+        return value != null
+            && Arrays.stream(values()).anyMatch(restriction -> restriction.value == value);
     }
 }

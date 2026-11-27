@@ -1,7 +1,7 @@
 package ru.ticketflowplatform.eventinventoryservice.domain.model.entity.enums;
 
-import org.junit.jupiter.api.DisplayName;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 

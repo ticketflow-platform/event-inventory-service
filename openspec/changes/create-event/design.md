@@ -26,9 +26,9 @@ The event owns a single organizer identified by the authenticated Keycloak JWT `
 
 ### HTTP contract
 
-Use `POST /api/v1/events`. Only `title` is required to create a draft; `description`, `ageRestriction`, `categoryIds`, and `images` are optional. A supplied age restriction must be one of `0`, `6`, `12`, `16`, or `18`; `0` means no age restriction. Each image item contains an image ID and `type` (`COVER` or `GALLERY`). If images are supplied, exactly one must be `COVER`; the response places it before all `GALLERY` images. Publication, which is outside this change, will require an age restriction, at least one category, and a cover image. The response includes the generated `id`, `organizerId`, supplied event data, resolved category/image references, `DRAFT` status, and creation/update timestamps. `organizerId` is never accepted from the client.
+Use `POST /api/v1/events`. Only `title` is required to create a draft; `description`, `ageRestriction`, `categoryIds`, and `images` are optional. A supplied age restriction must be one of `0`, `6`, `12`, `16`, or `18`; `0` means no age restriction. Each image item contains an image ID and `position` (`COVER` or `GALLERY`), exposed with the same name in the response. If images are supplied, exactly one must be `COVER`; the response places it before all `GALLERY` images. Publication, which is outside this change, will require an age restriction, at least one category, and a cover image. The response includes the generated `id`, `organizerId`, supplied event data, resolved category/image references, `DRAFT` status, and creation/update timestamps. `organizerId` is never accepted from the client.
 
-The request requires an `Idempotency-Key` header. Retrying the same key with the same request returns the original result; reusing it with different request data is rejected.
+The request requires an `Idempotency-Key` header. A retry after the original result has been stored returns that result when the request content matches; reusing the key with different content is rejected. If concurrent requests race to store the same organizer-scoped key, the request that loses the database uniqueness race returns `409 Conflict`, including when its content is identical. The client resolves that conflict by querying the saved result using the same idempotency key through the separate `findByIdempotencyKey` operation; implementing that lookup is outside this change. The request fingerprint is SHA-256 over UTF-8 JSON of the request DTO with alphabetically ordered properties. The serializer is dedicated to fingerprinting and independent of HTTP serializer configuration; JSON preserves field boundaries, null values, escaping, and list order.
 
 ### Authorization and identity
 
@@ -36,7 +36,7 @@ Configure the service as an OAuth2 resource server and map the Keycloak realm ro
 
 ### Persistence model
 
-Persist `Event`, `Category`, and `Image` records with explicit link entities `EventCategory` and `EventImage`. `Image` stores its organizer owner, and `EventImage` stores the `ImagePosition` (`COVER` or `GALLERY`) using the existing `type` column. The response mapper orders links with `COVER` first and `GALLERY` afterward; no request-order guarantee is made among gallery images. The event has one organizer and many-to-many categories/images. Do not retain a separate single `imageId` on `Event`.
+Persist `Event`, `Category`, and `Image` records with explicit link entities `EventCategory` and `EventImage`. `Image` stores its organizer owner, and `EventImage` stores the `ImagePosition` (`COVER` or `GALLERY`) in the `position` column. `EventService` places links with `COVER` first and `GALLERY` afterward, both on creation and on an idempotent retry. Gallery images are not sorted by image ID. Mappers only convert the supplied values and preserve their order; no request-order guarantee is made among gallery images. The event has one organizer and many-to-many categories/images. Do not retain a separate single `imageId` on `Event`.
 
 ### Transaction boundary
 

@@ -30,15 +30,19 @@ class GlobalExceptionHandlerTest {
         String scenario,
         MockHttpServletRequest request,
         Exception exception,
-        ErrorResponseDto expected) throws Exception {
+        ErrorResponseDto expected)
+        throws Exception {
         ModelAndView result = resolver.resolveException(request, response, null, exception);
 
         Assertions.assertThat(result).isNotNull();
         Assertions.assertThat(result.isEmpty()).isTrue();
         Assertions.assertThat(response.getStatus()).isEqualTo(expected.status());
-        Assertions.assertThat(MediaType.parseMediaType(response.getContentType())).isEqualTo(MediaType.APPLICATION_JSON);
-        Assertions.assertThat(objectMapper.readValue(
-            response.getContentAsString(StandardCharsets.UTF_8), ErrorResponseDto.class
-        )).isEqualTo(expected);
+        Assertions.assertThat(MediaType.parseMediaType(response.getContentType()))
+            .isEqualTo(MediaType.APPLICATION_JSON);
+        Assertions.assertThat(
+            objectMapper.readValue(
+                response.getContentAsString(StandardCharsets.UTF_8),
+                ErrorResponseDto.class))
+            .isEqualTo(expected);
     }
 }

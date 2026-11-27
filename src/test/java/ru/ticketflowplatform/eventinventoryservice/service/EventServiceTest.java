@@ -4,7 +4,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,7 +15,6 @@ import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
-
 import ru.ticketflowplatform.eventinventoryservice.domain.exception.EventNotFoundException;
 import ru.ticketflowplatform.eventinventoryservice.domain.exception.IdempotencyConflictException;
 import ru.ticketflowplatform.eventinventoryservice.domain.exception.InvalidEventReferenceException;
@@ -58,8 +56,10 @@ class EventServiceTest {
     private EventImageRepository eventImageRepository;
     @Mock
     private IdempotencyKeyRepository idempotencyKeyRepository;
+
     @Spy
     private EventMapper eventMapper = new EventMapperImpl(new EventCategoryMapperImpl(), new EventImageMapperImpl());
+
     @Spy
     private EventCategoryMapper eventCategoryMapper = new EventCategoryMapperImpl();
     @Spy
@@ -73,17 +73,20 @@ class EventServiceTest {
 
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource("scenario.cases.java.service.EventServiceTestCases#create_whenStoredImagesAreUnordered_thenReturnOrderedResponseTestCases")
-    @DisplayName("Сортирует обложку и галерею при идемпотентном повторе")
+    @DisplayName("Возвращает обложку первой без сортировки галереи по id при идемпотентном повторе")
     void create_whenStoredImagesAreUnordered_thenReturnOrderedResponseTest(
         String scenario,
         CreateEventRequestDto request,
         IdempotencyKey storedKey,
         CreateEventResponseDto expected) {
         Mockito.when(hashService.hash(request)).thenReturn("fingerprint");
-        Mockito.when(idempotencyKeyRepository.findByOrganizerIdAndKey("organizer-1", "request-1")).thenReturn(Optional.of(storedKey));
-        Mockito.when(eventRepository.findById(storedKey.getEvent().getId())).thenReturn(Optional.of(storedKey.getEvent()));
+        Mockito.when(idempotencyKeyRepository.findByOrganizerIdAndKey("organizer-1", "request-1"))
+            .thenReturn(Optional.of(storedKey));
+        Mockito.when(eventRepository.findById(storedKey.getEvent().getId()))
+            .thenReturn(Optional.of(storedKey.getEvent()));
 
-        Assertions.assertThat(eventService.create(request, "organizer-1", "request-1")).isEqualTo(expected);
+        Assertions.assertThat(eventService.create(request, "organizer-1", "request-1"))
+            .isEqualTo(expected);
     }
 
     @ParameterizedTest(name = "{index}: {0}")
@@ -95,10 +98,14 @@ class EventServiceTest {
         IdempotencyKey storedKey,
         CreateEventResponseDto expected) {
         Mockito.when(hashService.hash(request)).thenReturn("fingerprint");
-        Mockito.when(idempotencyKeyRepository.findByOrganizerIdAndKey("organizer-1", "request-1")).thenReturn(Optional.of(storedKey));
-        Mockito.when(eventRepository.findById(storedKey.getEvent().getId())).thenReturn(Optional.of(storedKey.getEvent()));
-        Mockito.when(eventMapper.toResponse(Mockito.eq(storedKey.getEvent()), Mockito.anyList())).thenReturn(expected);
-        Assertions.assertThat(eventService.create(request, "organizer-1", "request-1")).isSameAs(expected);
+        Mockito.when(idempotencyKeyRepository.findByOrganizerIdAndKey("organizer-1", "request-1"))
+            .thenReturn(Optional.of(storedKey));
+        Mockito.when(eventRepository.findById(storedKey.getEvent().getId()))
+            .thenReturn(Optional.of(storedKey.getEvent()));
+        Mockito.when(eventMapper.toResponse(Mockito.eq(storedKey.getEvent()), Mockito.anyList()))
+            .thenReturn(expected);
+        Assertions.assertThat(eventService.create(request, "organizer-1", "request-1"))
+            .isSameAs(expected);
     }
 
     @ParameterizedTest(name = "{index}: {0}")
@@ -110,27 +117,29 @@ class EventServiceTest {
         IdempotencyKey storedKey,
         UUID eventId) {
         Mockito.when(hashService.hash(request)).thenReturn("fingerprint");
-        Mockito.when(idempotencyKeyRepository.findByOrganizerIdAndKey("organizer-1", "request-1")).thenReturn(Optional.of(storedKey));
+        Mockito.when(idempotencyKeyRepository.findByOrganizerIdAndKey("organizer-1", "request-1"))
+            .thenReturn(Optional.of(storedKey));
         Mockito.when(eventRepository.findById(eventId)).thenReturn(Optional.empty());
 
-        Assertions.assertThatThrownBy(() -> eventService.create(request, "organizer-1", "request-1"))
+        Assertions.assertThatThrownBy(
+            () -> eventService.create(request, "organizer-1", "request-1"))
             .isInstanceOfSatisfying(
                 EventNotFoundException.class,
-                exception -> Assertions.assertThat(exception.getArguments()).containsExactly(eventId, "request-1")
-            );
+                exception -> Assertions.assertThat(exception.getArguments())
+                    .containsExactly(eventId, "request-1"));
     }
 
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource("scenario.cases.java.service.EventServiceTestCases#create_whenStoredKeyHasDifferentFingerprint_thenThrowConflictTestCases")
     @DisplayName("Отклоняет повторное использование ключа с другим содержимым по сценариям")
     void create_whenStoredKeyHasDifferentFingerprint_thenThrowConflictTest(
-        String scenario,
-        CreateEventRequestDto request,
-        IdempotencyKey storedKey) {
+        String scenario, CreateEventRequestDto request, IdempotencyKey storedKey) {
         Mockito.when(hashService.hash(request)).thenReturn("fingerprint");
-        Mockito.when(idempotencyKeyRepository.findByOrganizerIdAndKey("organizer-1", "request-1")).thenReturn(Optional.of(storedKey));
+        Mockito.when(idempotencyKeyRepository.findByOrganizerIdAndKey("organizer-1", "request-1"))
+            .thenReturn(Optional.of(storedKey));
 
-        Assertions.assertThatThrownBy(() -> eventService.create(request, "organizer-1", "request-1"))
+        Assertions.assertThatThrownBy(
+            () -> eventService.create(request, "organizer-1", "request-1"))
             .isInstanceOf(IdempotencyConflictException.class);
         Mockito.verifyNoInteractions(eventRepository);
     }
@@ -139,17 +148,17 @@ class EventServiceTest {
     @MethodSource("scenario.cases.java.service.EventServiceTestCases#create_whenAgeRestrictionIsUnsupported_thenRejectRequestTestCases")
     @DisplayName("Отклоняет неподдерживаемое возрастное ограничение по сценариям")
     void create_whenAgeRestrictionIsUnsupported_thenRejectRequestTest(
-        String scenario,
-        CreateEventRequestDto request,
-        Integer expectedValue) {
+        String scenario, CreateEventRequestDto request, Integer expectedValue) {
         Mockito.when(hashService.hash(request)).thenReturn("fingerprint");
-        Mockito.when(idempotencyKeyRepository.findByOrganizerIdAndKey("organizer-1", "request-1")).thenReturn(Optional.empty());
+        Mockito.when(idempotencyKeyRepository.findByOrganizerIdAndKey("organizer-1", "request-1"))
+            .thenReturn(Optional.empty());
 
-        Assertions.assertThatThrownBy(() -> eventService.create(request, "organizer-1", "request-1"))
+        Assertions.assertThatThrownBy(
+            () -> eventService.create(request, "organizer-1", "request-1"))
             .isInstanceOfSatisfying(
                 InvalidEventRequestException.class,
-                exception -> Assertions.assertThat(exception.getArguments()).containsExactly(expectedValue)
-            );
+                exception -> Assertions.assertThat(exception.getArguments())
+                    .containsExactly(expectedValue));
         Mockito.verifyNoInteractions(eventRepository);
     }
 
@@ -157,17 +166,17 @@ class EventServiceTest {
     @MethodSource("scenario.cases.java.service.EventServiceTestCases#create_whenImageListDoesNotHaveExactlyOneCover_thenRejectRequestTestCases")
     @DisplayName("Отклоняет непустой список изображений без единственной обложки по сценариям")
     void create_whenImageListDoesNotHaveExactlyOneCover_thenRejectRequestTest(
-        String scenario,
-        CreateEventRequestDto request) {
+        String scenario, CreateEventRequestDto request) {
         Mockito.when(hashService.hash(request)).thenReturn("fingerprint");
-        Mockito.when(idempotencyKeyRepository.findByOrganizerIdAndKey("organizer-1", "request-1")).thenReturn(Optional.empty());
+        Mockito.when(idempotencyKeyRepository.findByOrganizerIdAndKey("organizer-1", "request-1"))
+            .thenReturn(Optional.empty());
 
-        Assertions.assertThatThrownBy(() -> eventService.create(request, "organizer-1", "request-1"))
+        Assertions.assertThatThrownBy(
+            () -> eventService.create(request, "organizer-1", "request-1"))
             .isInstanceOfSatisfying(
                 InvalidEventRequestException.class,
                 exception -> Assertions.assertThat(exception.getMessageCode())
-                    .isEqualTo("api.event.images.cover.invalid.message")
-            );
+                    .isEqualTo("api.event.images.cover.invalid.message"));
         Mockito.verifyNoInteractions(categoryRepository, imageRepository, eventRepository);
     }
 
@@ -175,12 +184,13 @@ class EventServiceTest {
     @MethodSource("scenario.cases.java.service.EventServiceTestCases#create_whenCategoryIdsContainDuplicates_thenRejectRequestTestCases")
     @DisplayName("Отклоняет повторяющиеся категории по сценариям")
     void create_whenCategoryIdsContainDuplicates_thenRejectRequestTest(
-        String scenario,
-        CreateEventRequestDto request) {
+        String scenario, CreateEventRequestDto request) {
         Mockito.when(hashService.hash(request)).thenReturn("fingerprint");
-        Mockito.when(idempotencyKeyRepository.findByOrganizerIdAndKey("organizer-1", "request-1")).thenReturn(Optional.empty());
+        Mockito.when(idempotencyKeyRepository.findByOrganizerIdAndKey("organizer-1", "request-1"))
+            .thenReturn(Optional.empty());
 
-        Assertions.assertThatThrownBy(() -> eventService.create(request, "organizer-1", "request-1"))
+        Assertions.assertThatThrownBy(
+            () -> eventService.create(request, "organizer-1", "request-1"))
             .isInstanceOf(InvalidEventRequestException.class);
         Mockito.verifyNoInteractions(categoryRepository, imageRepository, eventRepository);
     }
@@ -189,12 +199,13 @@ class EventServiceTest {
     @MethodSource("scenario.cases.java.service.EventServiceTestCases#create_whenImageIdsContainDuplicates_thenRejectRequestTestCases")
     @DisplayName("Отклоняет повторяющиеся изображения по сценариям")
     void create_whenImageIdsContainDuplicates_thenRejectRequestTest(
-        String scenario,
-        CreateEventRequestDto request) {
+        String scenario, CreateEventRequestDto request) {
         Mockito.when(hashService.hash(request)).thenReturn("fingerprint");
-        Mockito.when(idempotencyKeyRepository.findByOrganizerIdAndKey("organizer-1", "request-1")).thenReturn(Optional.empty());
+        Mockito.when(idempotencyKeyRepository.findByOrganizerIdAndKey("organizer-1", "request-1"))
+            .thenReturn(Optional.empty());
 
-        Assertions.assertThatThrownBy(() -> eventService.create(request, "organizer-1", "request-1"))
+        Assertions.assertThatThrownBy(
+            () -> eventService.create(request, "organizer-1", "request-1"))
             .isInstanceOf(InvalidEventRequestException.class);
         Mockito.verifyNoInteractions(categoryRepository, imageRepository, eventRepository);
     }
@@ -208,19 +219,22 @@ class EventServiceTest {
         List<Category> foundCategories,
         String expectedMessageCode) {
         Mockito.when(hashService.hash(request)).thenReturn("fingerprint");
-        Mockito.when(idempotencyKeyRepository.findByOrganizerIdAndKey("organizer-1", "request-1")).thenReturn(Optional.empty());
+        Mockito.when(idempotencyKeyRepository.findByOrganizerIdAndKey("organizer-1", "request-1"))
+            .thenReturn(Optional.empty());
         Mockito.when(
             categoryRepository.findAllByIdInAndStatus(
-                request.categoryIds().stream().map(CreateEventRequestDto.CategoryRequestDto::id).toList(),
-                CategoryStatus.ACTIVE
-            )
-        ).thenReturn(foundCategories);
+                request.categoryIds().stream()
+                    .map(CreateEventRequestDto.CategoryRequestDto::id)
+                    .toList(),
+                CategoryStatus.ACTIVE))
+            .thenReturn(foundCategories);
 
-        Assertions.assertThatThrownBy(() -> eventService.create(request, "organizer-1", "request-1"))
+        Assertions.assertThatThrownBy(
+            () -> eventService.create(request, "organizer-1", "request-1"))
             .isInstanceOfSatisfying(
                 InvalidEventReferenceException.class,
-                exception -> Assertions.assertThat(exception.getMessageCode()).isEqualTo(expectedMessageCode)
-            );
+                exception -> Assertions.assertThat(exception.getMessageCode())
+                    .isEqualTo(expectedMessageCode));
         Mockito.verifyNoInteractions(imageRepository, eventRepository);
     }
 
@@ -234,25 +248,27 @@ class EventServiceTest {
         List<Image> foundImages,
         String expectedMessageCode) {
         Mockito.when(hashService.hash(request)).thenReturn("fingerprint");
-        Mockito.when(idempotencyKeyRepository.findByOrganizerIdAndKey("organizer-1", "request-1")).thenReturn(Optional.empty());
+        Mockito.when(idempotencyKeyRepository.findByOrganizerIdAndKey("organizer-1", "request-1"))
+            .thenReturn(Optional.empty());
         Mockito.when(
             categoryRepository.findAllByIdInAndStatus(
-                request.categoryIds().stream().map(CreateEventRequestDto.CategoryRequestDto::id).toList(),
-                CategoryStatus.ACTIVE
-            )
-        ).thenReturn(categories);
+                request.categoryIds().stream()
+                    .map(CreateEventRequestDto.CategoryRequestDto::id)
+                    .toList(),
+                CategoryStatus.ACTIVE))
+            .thenReturn(categories);
         Mockito.when(
             imageRepository.findAllByIdInAndOrganizerId(
                 request.images().stream().map(ImageRequestDto::id).toList(),
-                "organizer-1"
-            )
-        ).thenReturn(foundImages);
+                "organizer-1"))
+            .thenReturn(foundImages);
 
-        Assertions.assertThatThrownBy(() -> eventService.create(request, "organizer-1", "request-1"))
+        Assertions.assertThatThrownBy(
+            () -> eventService.create(request, "organizer-1", "request-1"))
             .isInstanceOfSatisfying(
                 InvalidEventReferenceException.class,
-                exception -> Assertions.assertThat(exception.getMessageCode()).isEqualTo(expectedMessageCode)
-            );
+                exception -> Assertions.assertThat(exception.getMessageCode())
+                    .isEqualTo(expectedMessageCode));
         Mockito.verifyNoInteractions(eventRepository);
     }
 
@@ -265,21 +281,28 @@ class EventServiceTest {
         Event event,
         CreateEventResponseDto expected) {
         Mockito.when(hashService.hash(request)).thenReturn("fingerprint");
-        Mockito.when(idempotencyKeyRepository.findByOrganizerIdAndKey("organizer-1", "request-1")).thenReturn(Optional.empty());
-        Mockito.when(eventMapper.toEntity(Mockito.eq(request), Mockito.eq("organizer-1"), Mockito.isNull(), Mockito.any()))
+        Mockito.when(idempotencyKeyRepository.findByOrganizerIdAndKey("organizer-1", "request-1"))
+            .thenReturn(Optional.empty());
+        Mockito.when(
+            eventMapper.toEntity(
+                Mockito.eq(request),
+                Mockito.eq("organizer-1"),
+                Mockito.isNull(),
+                Mockito.any()))
             .thenReturn(event);
         Mockito.when(eventRepository.save(event)).thenReturn(event);
-        Mockito.when(eventMapper.toResponse(Mockito.eq(event), Mockito.anyList())).thenReturn(expected);
+        Mockito.when(eventMapper.toResponse(Mockito.eq(event), Mockito.anyList()))
+            .thenReturn(expected);
         Mockito.when(
             idempotencyKeyMapper.toEntity(
                 Mockito.anyString(),
                 Mockito.anyString(),
                 Mockito.anyString(),
                 Mockito.eq(event),
-                Mockito.any()
-            )
-        ).thenReturn(new IdempotencyKey());
-        Assertions.assertThat(eventService.create(request, "organizer-1", "request-1")).isSameAs(expected);
+                Mockito.any()))
+            .thenReturn(new IdempotencyKey());
+        Assertions.assertThat(eventService.create(request, "organizer-1", "request-1"))
+            .isSameAs(expected);
         Mockito.verifyNoInteractions(categoryRepository, imageRepository);
     }
 
@@ -297,33 +320,42 @@ class EventServiceTest {
         int expectedImageLinks,
         CreateEventResponseDto expected) {
         Mockito.when(hashService.hash(request)).thenReturn("fingerprint");
-        Mockito.when(idempotencyKeyRepository.findByOrganizerIdAndKey("organizer-1", "request-1")).thenReturn(Optional.empty());
-        Mockito.when(categoryRepository.findAllByIdInAndStatus(Mockito.anyCollection(), Mockito.any())).thenReturn(categories);
-        Mockito.when(imageRepository.findAllByIdInAndOrganizerId(Mockito.anyCollection(), Mockito.eq("organizer-1"))).thenReturn(images);
+        Mockito.when(idempotencyKeyRepository.findByOrganizerIdAndKey("organizer-1", "request-1"))
+            .thenReturn(Optional.empty());
+        Mockito.when(
+            categoryRepository.findAllByIdInAndStatus(
+                Mockito.anyCollection(), Mockito.any()))
+            .thenReturn(categories);
+        Mockito.when(
+            imageRepository.findAllByIdInAndOrganizerId(
+                Mockito.anyCollection(), Mockito.eq("organizer-1")))
+            .thenReturn(images);
         Mockito.when(
             eventMapper.toEntity(
                 Mockito.eq(request),
                 Mockito.eq("organizer-1"),
                 Mockito.eq(expectedAgeRestriction),
-                Mockito.any(Instant.class)
-            )
-        ).thenReturn(event);
+                Mockito.any(Instant.class)))
+            .thenReturn(event);
         Mockito.when(eventRepository.save(event)).thenReturn(event);
-        Mockito.when(eventMapper.toResponse(Mockito.eq(event), Mockito.anyList())).thenReturn(expected);
+        Mockito.when(eventMapper.toResponse(Mockito.eq(event), Mockito.anyList()))
+            .thenReturn(expected);
         Mockito.when(
             idempotencyKeyMapper.toEntity(
                 Mockito.eq("organizer-1"),
                 Mockito.eq("request-1"),
                 Mockito.eq("fingerprint"),
                 Mockito.eq(event),
-                Mockito.any(Instant.class)
-            )
-        ).thenReturn(new IdempotencyKey());
-        Assertions.assertThat(eventService.create(request, "organizer-1", "request-1")).isSameAs(expected);
+                Mockito.any(Instant.class)))
+            .thenReturn(new IdempotencyKey());
+        Assertions.assertThat(eventService.create(request, "organizer-1", "request-1"))
+            .isSameAs(expected);
 
-        Assertions.assertThat(event.getEventCategories()).hasSize(expectedCategoryLinks)
+        Assertions.assertThat(event.getEventCategories())
+            .hasSize(expectedCategoryLinks)
             .allSatisfy(link -> Assertions.assertThat(link.getEvent()).isSameAs(event));
-        Assertions.assertThat(event.getEventImages()).hasSize(expectedImageLinks)
+        Assertions.assertThat(event.getEventImages())
+            .hasSize(expectedImageLinks)
             .allSatisfy(link -> Assertions.assertThat(link.getEvent()).isSameAs(event));
         Mockito.verify(eventCategoryRepository).saveAll(event.getEventCategories());
         Mockito.verify(eventImageRepository).saveAll(event.getEventImages());
@@ -339,8 +371,14 @@ class EventServiceTest {
         DataIntegrityViolationException failure,
         int expectedStatus) {
         Mockito.when(hashService.hash(request)).thenReturn("fingerprint");
-        Mockito.when(idempotencyKeyRepository.findByOrganizerIdAndKey("organizer-1", "request-1")).thenReturn(Optional.empty());
-        Mockito.when(eventMapper.toEntity(Mockito.eq(request), Mockito.eq("organizer-1"), Mockito.isNull(), Mockito.any()))
+        Mockito.when(idempotencyKeyRepository.findByOrganizerIdAndKey("organizer-1", "request-1"))
+            .thenReturn(Optional.empty());
+        Mockito.when(
+            eventMapper.toEntity(
+                Mockito.eq(request),
+                Mockito.eq("organizer-1"),
+                Mockito.isNull(),
+                Mockito.any()))
             .thenReturn(event);
         Mockito.when(eventRepository.save(event)).thenReturn(event);
         Mockito.when(
@@ -349,17 +387,18 @@ class EventServiceTest {
                 Mockito.anyString(),
                 Mockito.anyString(),
                 Mockito.eq(event),
-                Mockito.any()
-            )
-        ).thenReturn(new IdempotencyKey());
+                Mockito.any()))
+            .thenReturn(new IdempotencyKey());
         Mockito.doThrow(failure)
-            .when(idempotencyKeyRepository).saveAndFlush(Mockito.any(IdempotencyKey.class));
+            .when(idempotencyKeyRepository)
+            .saveAndFlush(Mockito.any(IdempotencyKey.class));
 
-        Assertions.assertThatThrownBy(() -> eventService.create(request, "organizer-1", "request-1"))
+        Assertions.assertThatThrownBy(
+            () -> eventService.create(request, "organizer-1", "request-1"))
             .isInstanceOfSatisfying(
                 IdempotencyConflictException.class,
-                exception -> Assertions.assertThat(exception.getStatus()).isEqualTo(expectedStatus)
-            );
+                exception -> Assertions.assertThat(exception.getStatus())
+                    .isEqualTo(expectedStatus));
     }
 
     @ParameterizedTest(name = "{index}: {0}")
@@ -373,7 +412,12 @@ class EventServiceTest {
         Mockito.when(hashService.hash(request)).thenReturn("fingerprint");
         Mockito.when(idempotencyKeyRepository.findByOrganizerIdAndKey("organizer-1", "request-1"))
             .thenReturn(Optional.empty());
-        Mockito.when(eventMapper.toEntity(Mockito.eq(request), Mockito.eq("organizer-1"), Mockito.isNull(), Mockito.any()))
+        Mockito.when(
+            eventMapper.toEntity(
+                Mockito.eq(request),
+                Mockito.eq("organizer-1"),
+                Mockito.isNull(),
+                Mockito.any()))
             .thenReturn(event);
         Mockito.when(eventRepository.save(event)).thenReturn(event);
         Mockito.when(
@@ -382,12 +426,14 @@ class EventServiceTest {
                 Mockito.anyString(),
                 Mockito.anyString(),
                 Mockito.eq(event),
-                Mockito.any()
-            )
-        ).thenReturn(new IdempotencyKey());
-        Mockito.doThrow(failure).when(idempotencyKeyRepository).saveAndFlush(Mockito.any(IdempotencyKey.class));
+                Mockito.any()))
+            .thenReturn(new IdempotencyKey());
+        Mockito.doThrow(failure)
+            .when(idempotencyKeyRepository)
+            .saveAndFlush(Mockito.any(IdempotencyKey.class));
 
-        Assertions.assertThatThrownBy(() -> eventService.create(request, "organizer-1", "request-1"))
+        Assertions.assertThatThrownBy(
+            () -> eventService.create(request, "organizer-1", "request-1"))
             .isInstanceOf(DataIntegrityViolationException.class)
             .isSameAs(failure);
     }
