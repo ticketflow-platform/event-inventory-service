@@ -31,18 +31,18 @@ class SecurityExceptionHandlerTest {
         String expectedChallenge,
         ErrorResponseDto expected)
         throws Exception {
-        handler.commence(request, response, exception);
+            handler.commence(request, response, exception);
 
-        Assertions.assertThat(response.getStatus()).isEqualTo(expected.status());
-        Assertions.assertThat(response.getHeader("WWW-Authenticate")).isEqualTo(expectedChallenge);
-        Assertions.assertThat(response.getContentType())
-            .isEqualTo(MediaType.APPLICATION_JSON_VALUE + ";charset=UTF-8");
-        Assertions.assertThat(response.getCharacterEncoding())
-            .isEqualTo(StandardCharsets.UTF_8.name());
-        Assertions.assertThat(
-            objectMapper.readValue(
-                response.getContentAsString(), ErrorResponseDto.class))
-            .isEqualTo(expected);
+            Assertions.assertThat(response.getStatus()).isEqualTo(expected.status());
+            Assertions.assertThat(response.getHeader("WWW-Authenticate")).isEqualTo(expectedChallenge);
+            Assertions.assertThat(response.getContentType())
+                .isEqualTo(MediaType.APPLICATION_JSON_VALUE + ";charset=UTF-8");
+            Assertions.assertThat(response.getCharacterEncoding())
+                .isEqualTo(StandardCharsets.UTF_8.name());
+            Assertions.assertThat(
+                objectMapper.readValue(
+                    response.getContentAsString(), ErrorResponseDto.class))
+                .isEqualTo(expected);
     }
 
     @ParameterizedTest(name = "{index}: {0}")
@@ -55,17 +55,17 @@ class SecurityExceptionHandlerTest {
         String expectedChallenge,
         ErrorResponseDto expected)
         throws Exception {
-        handler.handle(request, response, exception);
+            handler.handle(request, response, exception);
 
-        Assertions.assertThat(response.getStatus()).isEqualTo(expected.status());
-        Assertions.assertThat(response.getHeader("WWW-Authenticate")).isEqualTo(expectedChallenge);
-        Assertions.assertThat(response.getContentType())
-            .isEqualTo(MediaType.APPLICATION_JSON_VALUE + ";charset=UTF-8");
-        Assertions.assertThat(response.getCharacterEncoding())
-            .isEqualTo(StandardCharsets.UTF_8.name());
-        Assertions.assertThat(
-            objectMapper.readValue(
-                response.getContentAsString(), ErrorResponseDto.class))
-            .isEqualTo(expected);
+            Assertions.assertThat(response.getStatus()).isEqualTo(expected.status());
+            Assertions.assertThat(response.getHeader("WWW-Authenticate")).isEqualTo(expectedChallenge);
+            Assertions.assertThat(response.getContentType())
+                .isEqualTo(MediaType.APPLICATION_JSON_VALUE + ";charset=UTF-8");
+            Assertions.assertThat(response.getCharacterEncoding())
+                .isEqualTo(StandardCharsets.UTF_8.name());
+            Assertions.assertThat(
+                objectMapper.readValue(
+                    response.getContentAsString(), ErrorResponseDto.class))
+                .isEqualTo(expected);
     }
 }

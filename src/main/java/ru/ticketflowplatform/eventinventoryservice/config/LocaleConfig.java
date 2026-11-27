@@ -13,10 +13,10 @@ public class LocaleConfig {
 
     @Bean
     LocaleResolver localeResolver() {
-        AcceptHeaderLocaleResolver resolver = new AcceptHeaderLocaleResolver();
-        resolver.setDefaultLocale(Locale.forLanguageTag(I18N.RUSSIAN_LANGUAGE_TAG));
-        resolver.setSupportedLocales(
-            List.of(Locale.forLanguageTag(I18N.RUSSIAN_LANGUAGE_TAG), Locale.ENGLISH));
-        return resolver;
+            AcceptHeaderLocaleResolver resolver = new AcceptHeaderLocaleResolver();
+            resolver.setDefaultLocale(Locale.forLanguageTag(I18N.RUSSIAN_LANGUAGE_TAG));
+            resolver.setSupportedLocales(
+                List.of(Locale.forLanguageTag(I18N.RUSSIAN_LANGUAGE_TAG), Locale.ENGLISH));
+            return resolver;
     }
 }

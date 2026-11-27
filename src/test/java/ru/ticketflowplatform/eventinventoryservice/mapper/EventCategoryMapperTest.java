@@ -24,19 +24,19 @@ class EventCategoryMapperTest {
         Category category,
         Instant now,
         EventCategory.EventCategoryId expectedId) {
-        EventCategory link = eventCategoryMapper.toEntity(event, category, now);
+            EventCategory link = eventCategoryMapper.toEntity(event, category, now);
 
-        Assertions.assertThat(link.getEventCategoryId()).isEqualTo(expectedId);
-        Assertions.assertThat(link.getEvent()).isSameAs(event);
-        Assertions.assertThat(link.getCategory()).isSameAs(category);
-        Assertions.assertThat(link.getCreatedAt()).isEqualTo(now);
+            Assertions.assertThat(link.getEventCategoryId()).isEqualTo(expectedId);
+            Assertions.assertThat(link.getEvent()).isSameAs(event);
+            Assertions.assertThat(link.getCategory()).isSameAs(category);
+            Assertions.assertThat(link.getCreatedAt()).isEqualTo(now);
     }
 
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource("scenario.cases.java.mapper.EventCategoryMapperTestCases#toEntity_whenAllInputsAreNull_thenReturnNullTestCases")
     @DisplayName("Возвращает null, если все аргументы преобразования отсутствуют")
     void toEntity_whenAllInputsAreNull_thenReturnNullTest(String scenario) {
-        Assertions.assertThat(eventCategoryMapper.toEntity(null, null, null)).isNull();
+            Assertions.assertThat(eventCategoryMapper.toEntity(null, null, null)).isNull();
     }
 
     @ParameterizedTest(name = "{index}: {0}")
@@ -44,7 +44,7 @@ class EventCategoryMapperTest {
     @DisplayName("Извлекает идентификатор категории по сценариям")
     void toCategoryId_whenLinkIsProvided_thenReturnCategoryIdTest(
         String scenario, EventCategory link, UUID categoryId) {
-        Assertions.assertThat(eventCategoryMapper.toCategoryId(link)).isEqualTo(categoryId);
+            Assertions.assertThat(eventCategoryMapper.toCategoryId(link)).isEqualTo(categoryId);
     }
 
     @ParameterizedTest(name = "{index}: {0}")
@@ -52,6 +52,6 @@ class EventCategoryMapperTest {
     @DisplayName("Извлекает идентификаторы категорий по сценариям")
     void toCategoryIds_whenLinksAreProvided_thenReturnCategoryIdsTest(
         String scenario, List<EventCategory> links, List<UUID> categoryIds) {
-        Assertions.assertThat(eventCategoryMapper.toCategoryIds(links)).isEqualTo(categoryIds);
+            Assertions.assertThat(eventCategoryMapper.toCategoryIds(links)).isEqualTo(categoryIds);
     }
 }

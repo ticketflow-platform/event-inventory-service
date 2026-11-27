@@ -25,7 +25,7 @@ class HashServiceTest {
     @DisplayName("Вычисляет SHA-256 отпечаток запроса по сценариям")
     void hash_whenRequestIsProvided_thenReturnSha256FingerprintTest(
         String scenario, CreateEventRequestDto request, String expectedHash) {
-        Assertions.assertThat(hashService.hash(request)).isEqualTo(expectedHash);
+            Assertions.assertThat(hashService.hash(request)).isEqualTo(expectedHash);
     }
 
     @ParameterizedTest(name = "{index}: {0}")
@@ -35,8 +35,8 @@ class HashServiceTest {
         String scenario,
         CreateEventRequestDto firstRequest,
         CreateEventRequestDto secondRequest) {
-        Assertions.assertThat(hashService.hash(firstRequest))
-            .isNotEqualTo(hashService.hash(secondRequest));
+            Assertions.assertThat(hashService.hash(firstRequest))
+                .isNotEqualTo(hashService.hash(secondRequest));
     }
 
     @ParameterizedTest(name = "{index}: {0}")
@@ -45,13 +45,13 @@ class HashServiceTest {
     void hash_whenSha256IsUnavailable_thenThrowDomainExceptionTest(
         String scenario, CreateEventRequestDto request, NoSuchAlgorithmException failure)
         throws Exception {
-        try (MockedStatic<MessageDigest> messageDigest = Mockito.mockStatic(MessageDigest.class)) {
-            messageDigest.when(() -> MessageDigest.getInstance("SHA-256")).thenThrow(failure);
+            try (MockedStatic<MessageDigest> messageDigest = Mockito.mockStatic(MessageDigest.class)) {
+                messageDigest.when(() -> MessageDigest.getInstance("SHA-256")).thenThrow(failure);
 
-            Assertions.assertThatThrownBy(() -> hashService.hash(request))
-                .isInstanceOfSatisfying(
-                    HashGenerationException.class,
-                    exception -> Assertions.assertThat(exception.getCause()).isSameAs(failure));
-        }
+                Assertions.assertThatThrownBy(() -> hashService.hash(request))
+                    .isInstanceOfSatisfying(
+                        HashGenerationException.class,
+                        exception -> Assertions.assertThat(exception.getCause()).isSameAs(failure));
+            }
     }
 }

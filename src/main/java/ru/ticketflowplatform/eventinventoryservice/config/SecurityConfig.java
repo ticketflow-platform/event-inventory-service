@@ -47,21 +47,21 @@ public class SecurityConfig {
         @Value("${api.urls.openapi-docs}")
         String openApiDocsPath,
         SecurityExceptionHandler errorHandlers) {
-        return http.csrf(AbstractHttpConfigurer::disable)
-            .exceptionHandling(exceptions -> exceptions
-                .authenticationEntryPoint(errorHandlers)
-                .accessDeniedHandler(errorHandlers))
-            .authorizeHttpRequests(auth -> auth.requestMatchers(healthPath, healthPath + "/**")
-                .permitAll()
-                .requestMatchers(swaggerUiPath, swaggerUiEntryPath, openApiDocsPath)
-                .hasRole("DEVELOPER")
-                .anyRequest()
-                .authenticated())
-            .oauth2ResourceServer(oauth2 -> oauth2.authenticationEntryPoint(errorHandlers)
-                .accessDeniedHandler(errorHandlers)
-                .jwt(jwt -> jwt.jwtAuthenticationConverter(
-                    jwtAuthenticationConverter())))
-            .build();
+            return http.csrf(AbstractHttpConfigurer::disable)
+                .exceptionHandling(exceptions -> exceptions
+                    .authenticationEntryPoint(errorHandlers)
+                    .accessDeniedHandler(errorHandlers))
+                .authorizeHttpRequests(auth -> auth.requestMatchers(healthPath, healthPath + "/**")
+                    .permitAll()
+                    .requestMatchers(swaggerUiPath, swaggerUiEntryPath, openApiDocsPath)
+                    .hasRole("DEVELOPER")
+                    .anyRequest()
+                    .authenticated())
+                .oauth2ResourceServer(oauth2 -> oauth2.authenticationEntryPoint(errorHandlers)
+                    .accessDeniedHandler(errorHandlers)
+                    .jwt(jwt -> jwt.jwtAuthenticationConverter(
+                        jwtAuthenticationConverter())))
+                .build();
     }
 
     @Bean
@@ -73,53 +73,53 @@ public class SecurityConfig {
         @Value("${security.jwt.audience}")
         String audience,
         MessageSource messageSource) {
-        NimbusJwtDecoder decoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
-        OAuth2TokenValidator<Jwt> issuerValidator = JwtValidators.createDefaultWithIssuer(issuer);
+            NimbusJwtDecoder decoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
+            OAuth2TokenValidator<Jwt> issuerValidator = JwtValidators.createDefaultWithIssuer(issuer);
 
-        OAuth2TokenValidator<Jwt> audienceValidator = getAudienceValidator(
-            audience,
-            messageSource.getMessage(
-                "security.jwt.invalid_audience.error_description",
-                null,
-                Locale.ENGLISH));
+            OAuth2TokenValidator<Jwt> audienceValidator = getAudienceValidator(
+                audience,
+                messageSource.getMessage(
+                    "security.jwt.invalid_audience.error_description",
+                    null,
+                    Locale.ENGLISH));
 
-        decoder.setJwtValidator(
-            new DelegatingOAuth2TokenValidator<>(issuerValidator, audienceValidator));
-        return decoder;
+            decoder.setJwtValidator(
+                new DelegatingOAuth2TokenValidator<>(issuerValidator, audienceValidator));
+            return decoder;
     }
 
     private JwtAuthenticationConverter jwtAuthenticationConverter() {
-        JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
-        converter.setJwtGrantedAuthoritiesConverter(jwtAuthoritiesConverter());
-        return converter;
+            JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+            converter.setJwtGrantedAuthoritiesConverter(jwtAuthoritiesConverter());
+            return converter;
     }
 
     private OAuth2TokenValidator<Jwt> getAudienceValidator(
         String audience, String errorDescription) {
-        return token -> token.getAudience().contains(audience)
-            ? OAuth2TokenValidatorResult.success()
-            : OAuth2TokenValidatorResult.failure(
-                new OAuth2Error("invalid_token", errorDescription, null));
+            return token -> token.getAudience().contains(audience)
+                ? OAuth2TokenValidatorResult.success()
+                : OAuth2TokenValidatorResult.failure(
+                    new OAuth2Error("invalid_token", errorDescription, null));
     }
 
     private Converter<Jwt, Collection<GrantedAuthority>> jwtAuthoritiesConverter() {
-        return jwt -> {
-            ArrayList<GrantedAuthority> authorities = new ArrayList<>();
-            Map<String, Object> realmAccess = jwt.getClaimAsMap(REALM_ACCESS_CLAIM);
-            List<GrantedAuthority> enriched = enrichAuthority(authorities, realmAccess);
-            return enriched;
-        };
+            return jwt -> {
+                ArrayList<GrantedAuthority> authorities = new ArrayList<>();
+                Map<String, Object> realmAccess = jwt.getClaimAsMap(REALM_ACCESS_CLAIM);
+                List<GrantedAuthority> enriched = enrichAuthority(authorities, realmAccess);
+                return enriched;
+            };
     }
 
     private List<GrantedAuthority> enrichAuthority(
         List<GrantedAuthority> authorities, Map<String, Object> realmAccess) {
-        if (realmAccess != null && realmAccess.get(ROLES_FIELD) instanceof Collection<?> roles) {
-            roles.stream()
-                .map(Object::toString)
-                .map(role -> new SimpleGrantedAuthority(String.format(ROLE_PREFIX, role)))
-                .forEach(authorities::add);
-        }
+            if (realmAccess != null && realmAccess.get(ROLES_FIELD) instanceof Collection<?> roles) {
+                roles.stream()
+                    .map(Object::toString)
+                    .map(role -> new SimpleGrantedAuthority(String.format(ROLE_PREFIX, role)))
+                    .forEach(authorities::add);
+            }
 
-        return authorities;
+            return authorities;
     }
 }

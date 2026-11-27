@@ -49,39 +49,39 @@ class EventControllerTest extends BaseIntegrationTest {
         RuntimeException failure,
         ErrorResponseDto expectedError)
         throws Exception {
-        Mockito.doThrow(failure)
-            .when(eventService)
-            .create(
-                Mockito.any(CreateEventRequestDto.class),
-                Mockito.eq("organizer-1"),
-                Mockito.eq(idempotencyKey));
+            Mockito.doThrow(failure)
+                .when(eventService)
+                .create(
+                    Mockito.any(CreateEventRequestDto.class),
+                    Mockito.eq("organizer-1"),
+                    Mockito.eq(idempotencyKey));
 
-        MvcResult result = mockMvc.perform(
-            MockMvcRequestBuilders.post("/api/v1/events")
-                .with(
-                    SecurityMockMvcRequestPostProcessors.jwt()
-                        .jwt(jwt -> jwt.subject("organizer-1"))
-                        .authorities(
-                            new SimpleGrantedAuthority(
-                                "ROLE_ORGANIZER")))
-                .header("Idempotency-Key", idempotencyKey)
-                .header("Accept-Language", language)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestBody))
-            .andReturn();
-        ErrorResponseDto error = objectMapper.readValue(
-            result.getResponse().getContentAsString(), ErrorResponseDto.class);
+            MvcResult result = mockMvc.perform(
+                MockMvcRequestBuilders.post("/api/v1/events")
+                    .with(
+                        SecurityMockMvcRequestPostProcessors.jwt()
+                            .jwt(jwt -> jwt.subject("organizer-1"))
+                            .authorities(
+                                new SimpleGrantedAuthority(
+                                    "ROLE_ORGANIZER")))
+                    .header("Idempotency-Key", idempotencyKey)
+                    .header("Accept-Language", language)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestBody))
+                .andReturn();
+            ErrorResponseDto error = objectMapper.readValue(
+                result.getResponse().getContentAsString(), ErrorResponseDto.class);
 
-        Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(expectedError.status());
-        Assertions.assertThat(error).isEqualTo(expectedError);
-        Assertions.assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM events.events", Integer.class))
-            .isZero();
-        Assertions.assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM events.idempotency_keys", Integer.class))
-            .isZero();
+            Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(expectedError.status());
+            Assertions.assertThat(error).isEqualTo(expectedError);
+            Assertions.assertThat(
+                jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM events.events", Integer.class))
+                .isZero();
+            Assertions.assertThat(
+                jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM events.idempotency_keys", Integer.class))
+                .isZero();
     }
 
     @ParameterizedTest(name = "{index}: {0}")
@@ -95,41 +95,41 @@ class EventControllerTest extends BaseIntegrationTest {
         String expectedOperationSummary,
         String expectedResponseDescription)
         throws Exception {
-        MvcResult result = mockMvc.perform(
-            MockMvcRequestBuilders.get(openApiPath)
-                .with(
-                    SecurityMockMvcRequestPostProcessors.jwt()
-                        .authorities(
-                            new SimpleGrantedAuthority(
-                                "ROLE_DEVELOPER"))))
-            .andReturn();
-        JsonNode openApi = objectMapper.readTree(result.getResponse().getContentAsString());
-        JsonNode schema = openApi.at("/components/schemas/CreateEventRequestDto");
+            MvcResult result = mockMvc.perform(
+                MockMvcRequestBuilders.get(openApiPath)
+                    .with(
+                        SecurityMockMvcRequestPostProcessors.jwt()
+                            .authorities(
+                                new SimpleGrantedAuthority(
+                                    "ROLE_DEVELOPER"))))
+                .andReturn();
+            JsonNode openApi = objectMapper.readTree(result.getResponse().getContentAsString());
+            JsonNode schema = openApi.at("/components/schemas/CreateEventRequestDto");
 
-        Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(200);
-        Assertions.assertThat(schema.path("required").toString()).isEqualTo("[\"title\"]");
-        Assertions.assertThat(openApi.at("/components/schemas/ImageRequestDto/properties").has("position")).isTrue();
-        Assertions.assertThat(openApi.at("/components/schemas/ImageRequestDto/properties").has("type")).isFalse();
-        Assertions.assertThat(openApi.at("/components/schemas/EventImageResponseDto/properties").has("position"))
-            .isTrue();
-        Assertions.assertThat(openApi.at("/components/schemas/EventImageResponseDto/properties").has("type")).isFalse();
-        Assertions.assertThat(
-            schema.path("properties").path("ageRestriction").path("example").asString())
-            .isEqualTo("0");
-        Assertions.assertThat(
-            schema.path("properties").path("ageRestriction").path("enum").toString())
-            .isEqualTo("[\"0\",\"6\",\"12\",\"16\",\"18\"]");
-        Assertions.assertThat(
-            schema.path("properties").path("title").path("description").asString())
-            .isEqualTo(expectedTitleDescription);
-        Assertions.assertThat(openApi.path("info").path("title").asString())
-            .isEqualTo(expectedInfoTitle);
-        Assertions.assertThat(openApi.at("/paths/~1api~1v1~1events/post/summary").asString())
-            .isEqualTo(expectedOperationSummary);
-        Assertions.assertThat(
-            openApi.at("/paths/~1api~1v1~1events/post/responses/500/description")
-                .asString())
-            .isEqualTo(expectedResponseDescription);
+            Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(200);
+            Assertions.assertThat(schema.path("required").toString()).isEqualTo("[\"title\"]");
+            Assertions.assertThat(openApi.at("/components/schemas/ImageRequestDto/properties").has("position")).isTrue();
+            Assertions.assertThat(openApi.at("/components/schemas/ImageRequestDto/properties").has("type")).isFalse();
+            Assertions.assertThat(openApi.at("/components/schemas/EventImageResponseDto/properties").has("position"))
+                .isTrue();
+            Assertions.assertThat(openApi.at("/components/schemas/EventImageResponseDto/properties").has("type")).isFalse();
+            Assertions.assertThat(
+                schema.path("properties").path("ageRestriction").path("example").asString())
+                .isEqualTo("0");
+            Assertions.assertThat(
+                schema.path("properties").path("ageRestriction").path("enum").toString())
+                .isEqualTo("[\"0\",\"6\",\"12\",\"16\",\"18\"]");
+            Assertions.assertThat(
+                schema.path("properties").path("title").path("description").asString())
+                .isEqualTo(expectedTitleDescription);
+            Assertions.assertThat(openApi.path("info").path("title").asString())
+                .isEqualTo(expectedInfoTitle);
+            Assertions.assertThat(openApi.at("/paths/~1api~1v1~1events/post/summary").asString())
+                .isEqualTo(expectedOperationSummary);
+            Assertions.assertThat(
+                openApi.at("/paths/~1api~1v1~1events/post/responses/500/description")
+                    .asString())
+                .isEqualTo(expectedResponseDescription);
     }
 
     @ParameterizedTest(name = "{index}: {0}")
@@ -138,11 +138,11 @@ class EventControllerTest extends BaseIntegrationTest {
     void health_whenRequestIsUnauthenticated_thenAllowAccessTest(
         String scenario, String path, int expectedStatus, String expectedBody)
         throws Exception {
-        MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get(path)).andReturn();
+            MvcResult result = mockMvc.perform(MockMvcRequestBuilders.get(path)).andReturn();
 
-        Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(expectedStatus);
-        Assertions.assertThat(objectMapper.readTree(result.getResponse().getContentAsString()))
-            .isEqualTo(objectMapper.readTree(expectedBody));
+            Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(expectedStatus);
+            Assertions.assertThat(objectMapper.readTree(result.getResponse().getContentAsString()))
+                .isEqualTo(objectMapper.readTree(expectedBody));
     }
 
     @ParameterizedTest(name = "{index}: {0}")
@@ -154,37 +154,37 @@ class EventControllerTest extends BaseIntegrationTest {
         int expectedUnauthenticatedStatus,
         int expectedForbiddenStatus)
         throws Exception {
-        Assertions.assertThat(
-            mockMvc.perform(MockMvcRequestBuilders.get(path))
-                .andReturn()
-                .getResponse()
-                .getStatus())
-            .as(path)
-            .isEqualTo(expectedUnauthenticatedStatus);
-        Assertions.assertThat(
-            mockMvc.perform(
+            Assertions.assertThat(
+                mockMvc.perform(MockMvcRequestBuilders.get(path))
+                    .andReturn()
+                    .getResponse()
+                    .getStatus())
+                .as(path)
+                .isEqualTo(expectedUnauthenticatedStatus);
+            Assertions.assertThat(
+                mockMvc.perform(
+                    MockMvcRequestBuilders.get(path)
+                        .with(
+                            SecurityMockMvcRequestPostProcessors.jwt()
+                                .authorities(
+                                    new SimpleGrantedAuthority(
+                                        "ROLE_ORGANIZER"))))
+                    .andReturn()
+                    .getResponse()
+                    .getStatus())
+                .as(path)
+                .isEqualTo(expectedForbiddenStatus);
+            int developerStatus = mockMvc.perform(
                 MockMvcRequestBuilders.get(path)
                     .with(
                         SecurityMockMvcRequestPostProcessors.jwt()
                             .authorities(
                                 new SimpleGrantedAuthority(
-                                    "ROLE_ORGANIZER"))))
+                                    "ROLE_DEVELOPER"))))
                 .andReturn()
                 .getResponse()
-                .getStatus())
-            .as(path)
-            .isEqualTo(expectedForbiddenStatus);
-        int developerStatus = mockMvc.perform(
-            MockMvcRequestBuilders.get(path)
-                .with(
-                    SecurityMockMvcRequestPostProcessors.jwt()
-                        .authorities(
-                            new SimpleGrantedAuthority(
-                                "ROLE_DEVELOPER"))))
-            .andReturn()
-            .getResponse()
-            .getStatus();
-        Assertions.assertThat(developerStatus).as(path).isNotEqualTo(401).isNotEqualTo(403);
+                .getStatus();
+            Assertions.assertThat(developerStatus).as(path).isNotEqualTo(401).isNotEqualTo(403);
     }
 
     @ParameterizedTest(name = "{index}: {0}")
@@ -202,82 +202,82 @@ class EventControllerTest extends BaseIntegrationTest {
         List<UUID> expectedImageIds,
         List<ImagePosition> expectedImagePositions)
         throws Exception {
-        MvcResult result = mockMvc.perform(
-            MockMvcRequestBuilders.post("/api/v1/events")
-                .with(
-                    SecurityMockMvcRequestPostProcessors.jwt()
-                        .jwt(jwt -> jwt.subject("organizer-1"))
-                        .authorities(
-                            new SimpleGrantedAuthority(
-                                "ROLE_ORGANIZER")))
-                .header("Idempotency-Key", idempotencyKey)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestBody))
-            .andReturn();
-        CreateEventResponseDto response = objectMapper.readValue(
-            result.getResponse().getContentAsString(), CreateEventResponseDto.class);
+            MvcResult result = mockMvc.perform(
+                MockMvcRequestBuilders.post("/api/v1/events")
+                    .with(
+                        SecurityMockMvcRequestPostProcessors.jwt()
+                            .jwt(jwt -> jwt.subject("organizer-1"))
+                            .authorities(
+                                new SimpleGrantedAuthority(
+                                    "ROLE_ORGANIZER")))
+                    .header("Idempotency-Key", idempotencyKey)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestBody))
+                .andReturn();
+            CreateEventResponseDto response = objectMapper.readValue(
+                result.getResponse().getContentAsString(), CreateEventResponseDto.class);
 
-        Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(201);
-        Assertions.assertThat(response.id()).isNotNull();
-        Assertions.assertThat(response.organizerId()).isEqualTo("organizer-1");
-        Assertions.assertThat(response.title()).isEqualTo(expectedTitle);
-        Assertions.assertThat(response.description()).isEqualTo(expectedDescription);
-        Assertions.assertThat(response.categoryIds())
-            .containsExactlyElementsOf(expectedCategoryIds);
-        Assertions.assertThat(response.images())
-            .extracting(EventImageResponseDto::imageId)
-            .containsExactlyElementsOf(expectedImageIds);
-        Assertions.assertThat(response.images())
-            .extracting(EventImageResponseDto::position)
-            .containsExactlyElementsOf(expectedImagePositions);
-        Assertions.assertThat(response.ageRestriction()).isEqualTo(expectedAgeRestriction);
-        Assertions.assertThat(response.status()).isEqualTo(EventStatus.DRAFT);
-        Assertions.assertThat(response.createdAt()).isNotNull().isEqualTo(response.updatedAt());
-        Assertions.assertThat(response.images())
-            .extracting(EventImageResponseDto::createdAt)
-            .containsOnly(response.createdAt());
-        Assertions.assertThat(response.publishedAt()).isNull();
-        Assertions.assertThat(response.cancelledAt()).isNull();
-        Assertions.assertThat(response.completedAt()).isNull();
-        Assertions.assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT organizer_id FROM events.events WHERE id = ?",
-                String.class,
-                response.id()))
-            .isEqualTo("organizer-1");
-        Assertions.assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT status FROM events.events WHERE id = ?",
-                String.class,
-                response.id()))
-            .isEqualTo("DRAFT");
-        Assertions.assertThat(
-            jdbcTemplate.queryForList(
-                "SELECT category_id FROM events.events_categories WHERE event_id = ? ORDER BY category_id",
-                UUID.class,
-                response.id()))
-            .containsExactlyElementsOf(expectedCategoryIds);
-        Assertions.assertThat(
-            jdbcTemplate.queryForList(
-                "SELECT image_id FROM events.events_images WHERE event_id = ? ORDER BY position, image_id",
-                UUID.class,
-                response.id()))
-            .containsExactlyElementsOf(expectedImageIds);
-        Assertions.assertThat(
-            jdbcTemplate.queryForList(
-                "SELECT position FROM events.events_images WHERE event_id = ? ORDER BY position, image_id",
-                String.class,
-                response.id()))
-            .containsExactlyElementsOf(
-                expectedImagePositions.stream().map(Enum::name).toList());
-        Assertions.assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM events.events", Integer.class))
-            .isOne();
-        Assertions.assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM events.idempotency_keys", Integer.class))
-            .isOne();
+            Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(201);
+            Assertions.assertThat(response.id()).isNotNull();
+            Assertions.assertThat(response.organizerId()).isEqualTo("organizer-1");
+            Assertions.assertThat(response.title()).isEqualTo(expectedTitle);
+            Assertions.assertThat(response.description()).isEqualTo(expectedDescription);
+            Assertions.assertThat(response.categoryIds())
+                .containsExactlyElementsOf(expectedCategoryIds);
+            Assertions.assertThat(response.images())
+                .extracting(EventImageResponseDto::imageId)
+                .containsExactlyElementsOf(expectedImageIds);
+            Assertions.assertThat(response.images())
+                .extracting(EventImageResponseDto::position)
+                .containsExactlyElementsOf(expectedImagePositions);
+            Assertions.assertThat(response.ageRestriction()).isEqualTo(expectedAgeRestriction);
+            Assertions.assertThat(response.status()).isEqualTo(EventStatus.DRAFT);
+            Assertions.assertThat(response.createdAt()).isNotNull().isEqualTo(response.updatedAt());
+            Assertions.assertThat(response.images())
+                .extracting(EventImageResponseDto::createdAt)
+                .containsOnly(response.createdAt());
+            Assertions.assertThat(response.publishedAt()).isNull();
+            Assertions.assertThat(response.cancelledAt()).isNull();
+            Assertions.assertThat(response.completedAt()).isNull();
+            Assertions.assertThat(
+                jdbcTemplate.queryForObject(
+                    "SELECT organizer_id FROM events.events WHERE id = ?",
+                    String.class,
+                    response.id()))
+                .isEqualTo("organizer-1");
+            Assertions.assertThat(
+                jdbcTemplate.queryForObject(
+                    "SELECT status FROM events.events WHERE id = ?",
+                    String.class,
+                    response.id()))
+                .isEqualTo("DRAFT");
+            Assertions.assertThat(
+                jdbcTemplate.queryForList(
+                    "SELECT category_id FROM events.events_categories WHERE event_id = ? ORDER BY category_id",
+                    UUID.class,
+                    response.id()))
+                .containsExactlyElementsOf(expectedCategoryIds);
+            Assertions.assertThat(
+                jdbcTemplate.queryForList(
+                    "SELECT image_id FROM events.events_images WHERE event_id = ? ORDER BY position, image_id",
+                    UUID.class,
+                    response.id()))
+                .containsExactlyElementsOf(expectedImageIds);
+            Assertions.assertThat(
+                jdbcTemplate.queryForList(
+                    "SELECT position FROM events.events_images WHERE event_id = ? ORDER BY position, image_id",
+                    String.class,
+                    response.id()))
+                .containsExactlyElementsOf(
+                    expectedImagePositions.stream().map(Enum::name).toList());
+            Assertions.assertThat(
+                jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM events.events", Integer.class))
+                .isOne();
+            Assertions.assertThat(
+                jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM events.idempotency_keys", Integer.class))
+                .isOne();
     }
 
     @ParameterizedTest(name = "{index}: {0}")
@@ -290,39 +290,39 @@ class EventControllerTest extends BaseIntegrationTest {
         String idempotencyKey,
         ErrorResponseDto expectedError)
         throws Exception {
-        MvcResult result = mockMvc.perform(
-            MockMvcRequestBuilders.post("/api/v1/events")
-                .with(
-                    SecurityMockMvcRequestPostProcessors.jwt()
-                        .jwt(jwt -> jwt.subject("organizer-1"))
-                        .authorities(
-                            new SimpleGrantedAuthority(
-                                "ROLE_ORGANIZER")))
-                .header("Idempotency-Key", idempotencyKey)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestBody))
-            .andReturn();
-        ErrorResponseDto error = objectMapper.readValue(
-            result.getResponse().getContentAsString(), ErrorResponseDto.class);
+            MvcResult result = mockMvc.perform(
+                MockMvcRequestBuilders.post("/api/v1/events")
+                    .with(
+                        SecurityMockMvcRequestPostProcessors.jwt()
+                            .jwt(jwt -> jwt.subject("organizer-1"))
+                            .authorities(
+                                new SimpleGrantedAuthority(
+                                    "ROLE_ORGANIZER")))
+                    .header("Idempotency-Key", idempotencyKey)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestBody))
+                .andReturn();
+            ErrorResponseDto error = objectMapper.readValue(
+                result.getResponse().getContentAsString(), ErrorResponseDto.class);
 
-        Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(expectedError.status());
-        Assertions.assertThat(error).isEqualTo(expectedError);
-        Assertions.assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM events.events", Integer.class))
-            .isZero();
-        Assertions.assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM events.events_categories", Integer.class))
-            .isZero();
-        Assertions.assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM events.events_images", Integer.class))
-            .isZero();
-        Assertions.assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM events.idempotency_keys", Integer.class))
-            .isZero();
+            Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(expectedError.status());
+            Assertions.assertThat(error).isEqualTo(expectedError);
+            Assertions.assertThat(
+                jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM events.events", Integer.class))
+                .isZero();
+            Assertions.assertThat(
+                jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM events.events_categories", Integer.class))
+                .isZero();
+            Assertions.assertThat(
+                jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM events.events_images", Integer.class))
+                .isZero();
+            Assertions.assertThat(
+                jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM events.idempotency_keys", Integer.class))
+                .isZero();
     }
 
     @ParameterizedTest(name = "{index}: {0}")
@@ -330,23 +330,23 @@ class EventControllerTest extends BaseIntegrationTest {
     @DisplayName("Возвращает ошибку для некорректного JSON")
     void create_whenJsonIsMalformed_thenReturnBadRequestTest(
         String scenario, String requestBody, ErrorResponseDto expectedError) throws Exception {
-        MvcResult result = mockMvc.perform(
-            MockMvcRequestBuilders.post("/api/v1/events")
-                .with(
-                    SecurityMockMvcRequestPostProcessors.jwt()
-                        .jwt(jwt -> jwt.subject("organizer-1"))
-                        .authorities(
-                            new SimpleGrantedAuthority(
-                                "ROLE_ORGANIZER")))
-                .header("Idempotency-Key", "malformed-json")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestBody))
-            .andReturn();
-        ErrorResponseDto error = objectMapper.readValue(
-            result.getResponse().getContentAsString(), ErrorResponseDto.class);
+            MvcResult result = mockMvc.perform(
+                MockMvcRequestBuilders.post("/api/v1/events")
+                    .with(
+                        SecurityMockMvcRequestPostProcessors.jwt()
+                            .jwt(jwt -> jwt.subject("organizer-1"))
+                            .authorities(
+                                new SimpleGrantedAuthority(
+                                    "ROLE_ORGANIZER")))
+                    .header("Idempotency-Key", "malformed-json")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestBody))
+                .andReturn();
+            ErrorResponseDto error = objectMapper.readValue(
+                result.getResponse().getContentAsString(), ErrorResponseDto.class);
 
-        Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(expectedError.status());
-        Assertions.assertThat(error).isEqualTo(expectedError);
+            Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(expectedError.status());
+            Assertions.assertThat(error).isEqualTo(expectedError);
     }
 
     @ParameterizedTest(name = "{index}: {0}")
@@ -355,18 +355,18 @@ class EventControllerTest extends BaseIntegrationTest {
     void create_whenRequestIsUnauthenticated_thenReturnUnauthorizedTest(
         String scenario, String requestBody, String language, ErrorResponseDto expectedError)
         throws Exception {
-        MvcResult result = mockMvc.perform(
-            MockMvcRequestBuilders.post("/api/v1/events")
-                .header("Idempotency-Key", "unauthenticated-key")
-                .header("Accept-Language", language)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestBody))
-            .andReturn();
+            MvcResult result = mockMvc.perform(
+                MockMvcRequestBuilders.post("/api/v1/events")
+                    .header("Idempotency-Key", "unauthenticated-key")
+                    .header("Accept-Language", language)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestBody))
+                .andReturn();
 
-        ErrorResponseDto error = objectMapper.readValue(
-            result.getResponse().getContentAsString(), ErrorResponseDto.class);
-        Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(expectedError.status());
-        Assertions.assertThat(error).isEqualTo(expectedError);
+            ErrorResponseDto error = objectMapper.readValue(
+                result.getResponse().getContentAsString(), ErrorResponseDto.class);
+            Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(expectedError.status());
+            Assertions.assertThat(error).isEqualTo(expectedError);
     }
 
     @ParameterizedTest(name = "{index}: {0}")
@@ -375,20 +375,20 @@ class EventControllerTest extends BaseIntegrationTest {
     void create_whenBearerTokenIsInvalid_thenReturnUnauthorizedErrorTest(
         String scenario, String token, String expectedChallenge, ErrorResponseDto expectedError)
         throws Exception {
-        MvcResult result = mockMvc.perform(
-            MockMvcRequestBuilders.post("/api/v1/events")
-                .header("Authorization", "Bearer " + token)
-                .header("Accept-Language", "ru")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{}"))
-            .andReturn();
+            MvcResult result = mockMvc.perform(
+                MockMvcRequestBuilders.post("/api/v1/events")
+                    .header("Authorization", "Bearer " + token)
+                    .header("Accept-Language", "ru")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{}"))
+                .andReturn();
 
-        Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(expectedError.status());
-        Assertions.assertThat(result.getResponse().getHeader("WWW-Authenticate"))
-            .startsWith(expectedChallenge);
-        ErrorResponseDto error = objectMapper.readValue(
-            result.getResponse().getContentAsString(), ErrorResponseDto.class);
-        Assertions.assertThat(error).isEqualTo(expectedError);
+            Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(expectedError.status());
+            Assertions.assertThat(result.getResponse().getHeader("WWW-Authenticate"))
+                .startsWith(expectedChallenge);
+            ErrorResponseDto error = objectMapper.readValue(
+                result.getResponse().getContentAsString(), ErrorResponseDto.class);
+            Assertions.assertThat(error).isEqualTo(expectedError);
     }
 
     @ParameterizedTest(name = "{index}: {0}")
@@ -396,21 +396,21 @@ class EventControllerTest extends BaseIntegrationTest {
     @DisplayName("Отклоняет пользователя без роли организатора по сценариям")
     void create_whenUserLacksOrganizerRole_thenReturnForbiddenTest(
         String scenario, String requestBody, ErrorResponseDto expectedError) throws Exception {
-        MvcResult result = mockMvc.perform(
-            MockMvcRequestBuilders.post("/api/v1/events")
-                .with(
-                    SecurityMockMvcRequestPostProcessors.jwt()
-                        .jwt(jwt -> jwt.subject("user-1")))
-                .header("Idempotency-Key", "non-organizer-key")
-                .header("Accept-Language", "ru")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestBody))
-            .andReturn();
+            MvcResult result = mockMvc.perform(
+                MockMvcRequestBuilders.post("/api/v1/events")
+                    .with(
+                        SecurityMockMvcRequestPostProcessors.jwt()
+                            .jwt(jwt -> jwt.subject("user-1")))
+                    .header("Idempotency-Key", "non-organizer-key")
+                    .header("Accept-Language", "ru")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestBody))
+                .andReturn();
 
-        ErrorResponseDto error = objectMapper.readValue(
-            result.getResponse().getContentAsString(), ErrorResponseDto.class);
-        Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(expectedError.status());
-        Assertions.assertThat(error).isEqualTo(expectedError);
+            ErrorResponseDto error = objectMapper.readValue(
+                result.getResponse().getContentAsString(), ErrorResponseDto.class);
+            Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(expectedError.status());
+            Assertions.assertThat(error).isEqualTo(expectedError);
     }
 
     @ParameterizedTest(name = "{index}: {0}")
@@ -418,50 +418,50 @@ class EventControllerTest extends BaseIntegrationTest {
     @DisplayName("Создает черновик с любыми необязательными полями")
     void create_whenOptionalDraftFieldsAreOmitted_thenCreateDraftTest(
         String scenario, String requestBody, String idempotencyKey) throws Exception {
-        MvcResult result = mockMvc.perform(
-            MockMvcRequestBuilders.post("/api/v1/events")
-                .with(
-                    SecurityMockMvcRequestPostProcessors.jwt()
-                        .jwt(jwt -> jwt.subject("organizer-1"))
-                        .authorities(
-                            new SimpleGrantedAuthority(
-                                "ROLE_ORGANIZER")))
-                .header("Idempotency-Key", idempotencyKey)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestBody))
-            .andReturn();
-        CreateEventResponseDto response = objectMapper.readValue(
-            result.getResponse().getContentAsString(), CreateEventResponseDto.class);
+            MvcResult result = mockMvc.perform(
+                MockMvcRequestBuilders.post("/api/v1/events")
+                    .with(
+                        SecurityMockMvcRequestPostProcessors.jwt()
+                            .jwt(jwt -> jwt.subject("organizer-1"))
+                            .authorities(
+                                new SimpleGrantedAuthority(
+                                    "ROLE_ORGANIZER")))
+                    .header("Idempotency-Key", idempotencyKey)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestBody))
+                .andReturn();
+            CreateEventResponseDto response = objectMapper.readValue(
+                result.getResponse().getContentAsString(), CreateEventResponseDto.class);
 
-        Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(201);
-        Assertions.assertThat(response.id()).isNotNull();
-        Assertions.assertThat(response.organizerId()).isEqualTo("organizer-1");
-        Assertions.assertThat(response.title()).isEqualTo("Festival");
-        Assertions.assertThat(response.description()).isNull();
-        Assertions.assertThat(response.categoryIds()).isEmpty();
-        Assertions.assertThat(response.images()).isEmpty();
-        Assertions.assertThat(response.ageRestriction()).isNull();
-        Assertions.assertThat(response.status()).isEqualTo(EventStatus.DRAFT);
-        Assertions.assertThat(response.createdAt()).isNotNull().isEqualTo(response.updatedAt());
-        Assertions.assertThat(response.publishedAt()).isNull();
-        Assertions.assertThat(response.cancelledAt()).isNull();
-        Assertions.assertThat(response.completedAt()).isNull();
-        Assertions.assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM events.events", Integer.class))
-            .isOne();
-        Assertions.assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM events.events_categories", Integer.class))
-            .isZero();
-        Assertions.assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM events.events_images", Integer.class))
-            .isZero();
-        Assertions.assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM events.idempotency_keys", Integer.class))
-            .isOne();
+            Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(201);
+            Assertions.assertThat(response.id()).isNotNull();
+            Assertions.assertThat(response.organizerId()).isEqualTo("organizer-1");
+            Assertions.assertThat(response.title()).isEqualTo("Festival");
+            Assertions.assertThat(response.description()).isNull();
+            Assertions.assertThat(response.categoryIds()).isEmpty();
+            Assertions.assertThat(response.images()).isEmpty();
+            Assertions.assertThat(response.ageRestriction()).isNull();
+            Assertions.assertThat(response.status()).isEqualTo(EventStatus.DRAFT);
+            Assertions.assertThat(response.createdAt()).isNotNull().isEqualTo(response.updatedAt());
+            Assertions.assertThat(response.publishedAt()).isNull();
+            Assertions.assertThat(response.cancelledAt()).isNull();
+            Assertions.assertThat(response.completedAt()).isNull();
+            Assertions.assertThat(
+                jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM events.events", Integer.class))
+                .isOne();
+            Assertions.assertThat(
+                jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM events.events_categories", Integer.class))
+                .isZero();
+            Assertions.assertThat(
+                jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM events.events_images", Integer.class))
+                .isZero();
+            Assertions.assertThat(
+                jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM events.idempotency_keys", Integer.class))
+                .isOne();
     }
 
     @ParameterizedTest(name = "{index}: {0}")
@@ -473,31 +473,31 @@ class EventControllerTest extends BaseIntegrationTest {
         String idempotencyKey,
         ErrorResponseDto expectedError)
         throws Exception {
-        MvcResult result = mockMvc.perform(
-            MockMvcRequestBuilders.post("/api/v1/events")
-                .with(
-                    SecurityMockMvcRequestPostProcessors.jwt()
-                        .jwt(jwt -> jwt.subject("organizer-1"))
-                        .authorities(
-                            new SimpleGrantedAuthority(
-                                "ROLE_ORGANIZER")))
-                .header("Idempotency-Key", idempotencyKey)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestBody))
-            .andReturn();
-        ErrorResponseDto error = objectMapper.readValue(
-            result.getResponse().getContentAsString(), ErrorResponseDto.class);
+            MvcResult result = mockMvc.perform(
+                MockMvcRequestBuilders.post("/api/v1/events")
+                    .with(
+                        SecurityMockMvcRequestPostProcessors.jwt()
+                            .jwt(jwt -> jwt.subject("organizer-1"))
+                            .authorities(
+                                new SimpleGrantedAuthority(
+                                    "ROLE_ORGANIZER")))
+                    .header("Idempotency-Key", idempotencyKey)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestBody))
+                .andReturn();
+            ErrorResponseDto error = objectMapper.readValue(
+                result.getResponse().getContentAsString(), ErrorResponseDto.class);
 
-        Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(expectedError.status());
-        Assertions.assertThat(error).isEqualTo(expectedError);
-        Assertions.assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM events.events", Integer.class))
-            .isZero();
-        Assertions.assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM events.idempotency_keys", Integer.class))
-            .isZero();
+            Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(expectedError.status());
+            Assertions.assertThat(error).isEqualTo(expectedError);
+            Assertions.assertThat(
+                jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM events.events", Integer.class))
+                .isZero();
+            Assertions.assertThat(
+                jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM events.idempotency_keys", Integer.class))
+                .isZero();
     }
 
     @ParameterizedTest(name = "{index}: {0}")
@@ -506,23 +506,23 @@ class EventControllerTest extends BaseIntegrationTest {
     void create_whenIdempotencyHeaderIsMissing_thenReturnLocalizedBadRequestTest(
         String scenario, String requestBody, String language, ErrorResponseDto expectedError)
         throws Exception {
-        MvcResult result = mockMvc.perform(
-            MockMvcRequestBuilders.post("/api/v1/events")
-                .with(
-                    SecurityMockMvcRequestPostProcessors.jwt()
-                        .jwt(jwt -> jwt.subject("organizer-1"))
-                        .authorities(
-                            new SimpleGrantedAuthority(
-                                "ROLE_ORGANIZER")))
-                .header("Accept-Language", language)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestBody))
-            .andReturn();
+            MvcResult result = mockMvc.perform(
+                MockMvcRequestBuilders.post("/api/v1/events")
+                    .with(
+                        SecurityMockMvcRequestPostProcessors.jwt()
+                            .jwt(jwt -> jwt.subject("organizer-1"))
+                            .authorities(
+                                new SimpleGrantedAuthority(
+                                    "ROLE_ORGANIZER")))
+                    .header("Accept-Language", language)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestBody))
+                .andReturn();
 
-        ErrorResponseDto error = objectMapper.readValue(
-            result.getResponse().getContentAsString(), ErrorResponseDto.class);
-        Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(expectedError.status());
-        Assertions.assertThat(error).isEqualTo(expectedError);
+            ErrorResponseDto error = objectMapper.readValue(
+                result.getResponse().getContentAsString(), ErrorResponseDto.class);
+            Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(expectedError.status());
+            Assertions.assertThat(error).isEqualTo(expectedError);
     }
 
     @ParameterizedTest(name = "{index}: {0}")
@@ -534,23 +534,23 @@ class EventControllerTest extends BaseIntegrationTest {
         String requestBody,
         ErrorResponseDto expectedError)
         throws Exception {
-        MvcResult result = mockMvc.perform(
-            MockMvcRequestBuilders.post("/api/v1/events")
-                .with(
-                    SecurityMockMvcRequestPostProcessors.jwt()
-                        .jwt(jwt -> jwt.subject("organizer-1"))
-                        .authorities(
-                            new SimpleGrantedAuthority(
-                                "ROLE_ORGANIZER")))
-                .header("Idempotency-Key", idempotencyKey)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestBody))
-            .andReturn();
+            MvcResult result = mockMvc.perform(
+                MockMvcRequestBuilders.post("/api/v1/events")
+                    .with(
+                        SecurityMockMvcRequestPostProcessors.jwt()
+                            .jwt(jwt -> jwt.subject("organizer-1"))
+                            .authorities(
+                                new SimpleGrantedAuthority(
+                                    "ROLE_ORGANIZER")))
+                    .header("Idempotency-Key", idempotencyKey)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestBody))
+                .andReturn();
 
-        ErrorResponseDto error = objectMapper.readValue(
-            result.getResponse().getContentAsString(), ErrorResponseDto.class);
-        Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(expectedError.status());
-        Assertions.assertThat(error).isEqualTo(expectedError);
+            ErrorResponseDto error = objectMapper.readValue(
+                result.getResponse().getContentAsString(), ErrorResponseDto.class);
+            Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(expectedError.status());
+            Assertions.assertThat(error).isEqualTo(expectedError);
     }
 
     @ParameterizedTest(name = "{index}: {0}")
@@ -568,111 +568,111 @@ class EventControllerTest extends BaseIntegrationTest {
         List<Map<String, Object>> expectedFirstLinks,
         List<Map<String, Object>> expectedSecondLinks)
         throws Exception {
-        MockHttpServletRequestBuilder firstCommand = MockMvcRequestBuilders.post("/api/v1/events")
-            .with(
-                SecurityMockMvcRequestPostProcessors.jwt()
-                    .jwt(jwt -> jwt.subject("organizer-1"))
-                    .authorities(new SimpleGrantedAuthority("ROLE_ORGANIZER")))
-            .header("Idempotency-Key", firstKey)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(firstRequest);
-        MvcResult firstResult = mockMvc.perform(firstCommand).andReturn();
-        MvcResult secondResult = mockMvc.perform(
-            MockMvcRequestBuilders.post("/api/v1/events")
+            MockHttpServletRequestBuilder firstCommand = MockMvcRequestBuilders.post("/api/v1/events")
                 .with(
                     SecurityMockMvcRequestPostProcessors.jwt()
                         .jwt(jwt -> jwt.subject("organizer-1"))
-                        .authorities(
-                            new SimpleGrantedAuthority(
-                                "ROLE_ORGANIZER")))
-                .header("Idempotency-Key", secondKey)
+                        .authorities(new SimpleGrantedAuthority("ROLE_ORGANIZER")))
+                .header("Idempotency-Key", firstKey)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(secondRequest))
-            .andReturn();
-        MvcResult retryResult = mockMvc.perform(firstCommand).andReturn();
+                .content(firstRequest);
+            MvcResult firstResult = mockMvc.perform(firstCommand).andReturn();
+            MvcResult secondResult = mockMvc.perform(
+                MockMvcRequestBuilders.post("/api/v1/events")
+                    .with(
+                        SecurityMockMvcRequestPostProcessors.jwt()
+                            .jwt(jwt -> jwt.subject("organizer-1"))
+                            .authorities(
+                                new SimpleGrantedAuthority(
+                                    "ROLE_ORGANIZER")))
+                    .header("Idempotency-Key", secondKey)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(secondRequest))
+                .andReturn();
+            MvcResult retryResult = mockMvc.perform(firstCommand).andReturn();
 
-        Assertions.assertThat(firstResult.getResponse().getStatus()).isEqualTo(201);
-        Assertions.assertThat(secondResult.getResponse().getStatus()).isEqualTo(201);
-        Assertions.assertThat(retryResult.getResponse().getStatus()).isEqualTo(201);
-        CreateEventResponseDto firstResponse = objectMapper.readValue(
-            firstResult.getResponse().getContentAsString(),
-            CreateEventResponseDto.class);
-        CreateEventResponseDto secondResponse = objectMapper.readValue(
-            secondResult.getResponse().getContentAsString(),
-            CreateEventResponseDto.class);
-        CreateEventResponseDto retryResponse = objectMapper.readValue(
-            retryResult.getResponse().getContentAsString(),
-            CreateEventResponseDto.class);
+            Assertions.assertThat(firstResult.getResponse().getStatus()).isEqualTo(201);
+            Assertions.assertThat(secondResult.getResponse().getStatus()).isEqualTo(201);
+            Assertions.assertThat(retryResult.getResponse().getStatus()).isEqualTo(201);
+            CreateEventResponseDto firstResponse = objectMapper.readValue(
+                firstResult.getResponse().getContentAsString(),
+                CreateEventResponseDto.class);
+            CreateEventResponseDto secondResponse = objectMapper.readValue(
+                secondResult.getResponse().getContentAsString(),
+                CreateEventResponseDto.class);
+            CreateEventResponseDto retryResponse = objectMapper.readValue(
+                retryResult.getResponse().getContentAsString(),
+                CreateEventResponseDto.class);
 
-        Assertions.assertThat(firstResponse)
-            .usingRecursiveComparison()
-            .ignoringFields("id", "createdAt", "updatedAt", "images.createdAt")
-            .isEqualTo(expectedFirst);
-        Assertions.assertThat(secondResponse)
-            .usingRecursiveComparison()
-            .ignoringFields("id", "createdAt", "updatedAt", "images.createdAt")
-            .isEqualTo(expectedSecond);
-        Assertions.assertThat(firstResponse.id()).isNotNull();
-        Assertions.assertThat(secondResponse.id()).isNotNull().isNotEqualTo(firstResponse.id());
-        Assertions.assertThat(firstResponse.createdAt())
-            .isNotNull()
-            .isEqualTo(firstResponse.updatedAt());
-        Assertions.assertThat(secondResponse.createdAt())
-            .isNotNull()
-            .isEqualTo(secondResponse.updatedAt());
-        Assertions.assertThat(firstResponse.images())
-            .extracting(EventImageResponseDto::createdAt)
-            .containsOnly(firstResponse.createdAt());
-        Assertions.assertThat(secondResponse.images())
-            .extracting(EventImageResponseDto::createdAt)
-            .containsOnly(secondResponse.createdAt());
-        Assertions.assertThat(retryResponse).isEqualTo(firstResponse);
-        Assertions.assertThat(
-            jdbcTemplate.queryForList(
-                "SELECT image_id, position FROM events.events_images WHERE event_id = ? ORDER BY position, image_id",
-                firstResponse.id()))
-            .isEqualTo(expectedFirstLinks);
-        Assertions.assertThat(
-            jdbcTemplate.queryForList(
-                "SELECT image_id, position FROM events.events_images WHERE event_id = ? ORDER BY position, image_id",
-                secondResponse.id()))
-            .isEqualTo(expectedSecondLinks);
-        Assertions.assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT event_id FROM events.idempotency_keys WHERE organizer_id = ? AND key = ?",
-                UUID.class,
-                "organizer-1",
-                firstKey))
-            .isEqualTo(firstResponse.id());
-        Assertions.assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT event_id FROM events.idempotency_keys WHERE organizer_id = ? AND key = ?",
-                UUID.class,
-                "organizer-1",
-                secondKey))
-            .isEqualTo(secondResponse.id());
-        Assertions.assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM events.events", Integer.class))
-            .isEqualTo(2);
-        Assertions.assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM events.idempotency_keys", Integer.class))
-            .isEqualTo(2);
-        Assertions.assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM events.events_images", Integer.class))
-            .isEqualTo(4);
-        Assertions.assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM events.events_categories", Integer.class))
-            .isZero();
-        Assertions.assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM events.images WHERE organizer_id = ?",
-                Integer.class,
-                "organizer-1"))
-            .isEqualTo(2);
+            Assertions.assertThat(firstResponse)
+                .usingRecursiveComparison()
+                .ignoringFields("id", "createdAt", "updatedAt", "images.createdAt")
+                .isEqualTo(expectedFirst);
+            Assertions.assertThat(secondResponse)
+                .usingRecursiveComparison()
+                .ignoringFields("id", "createdAt", "updatedAt", "images.createdAt")
+                .isEqualTo(expectedSecond);
+            Assertions.assertThat(firstResponse.id()).isNotNull();
+            Assertions.assertThat(secondResponse.id()).isNotNull().isNotEqualTo(firstResponse.id());
+            Assertions.assertThat(firstResponse.createdAt())
+                .isNotNull()
+                .isEqualTo(firstResponse.updatedAt());
+            Assertions.assertThat(secondResponse.createdAt())
+                .isNotNull()
+                .isEqualTo(secondResponse.updatedAt());
+            Assertions.assertThat(firstResponse.images())
+                .extracting(EventImageResponseDto::createdAt)
+                .containsOnly(firstResponse.createdAt());
+            Assertions.assertThat(secondResponse.images())
+                .extracting(EventImageResponseDto::createdAt)
+                .containsOnly(secondResponse.createdAt());
+            Assertions.assertThat(retryResponse).isEqualTo(firstResponse);
+            Assertions.assertThat(
+                jdbcTemplate.queryForList(
+                    "SELECT image_id, position FROM events.events_images WHERE event_id = ? ORDER BY position, image_id",
+                    firstResponse.id()))
+                .isEqualTo(expectedFirstLinks);
+            Assertions.assertThat(
+                jdbcTemplate.queryForList(
+                    "SELECT image_id, position FROM events.events_images WHERE event_id = ? ORDER BY position, image_id",
+                    secondResponse.id()))
+                .isEqualTo(expectedSecondLinks);
+            Assertions.assertThat(
+                jdbcTemplate.queryForObject(
+                    "SELECT event_id FROM events.idempotency_keys WHERE organizer_id = ? AND key = ?",
+                    UUID.class,
+                    "organizer-1",
+                    firstKey))
+                .isEqualTo(firstResponse.id());
+            Assertions.assertThat(
+                jdbcTemplate.queryForObject(
+                    "SELECT event_id FROM events.idempotency_keys WHERE organizer_id = ? AND key = ?",
+                    UUID.class,
+                    "organizer-1",
+                    secondKey))
+                .isEqualTo(secondResponse.id());
+            Assertions.assertThat(
+                jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM events.events", Integer.class))
+                .isEqualTo(2);
+            Assertions.assertThat(
+                jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM events.idempotency_keys", Integer.class))
+                .isEqualTo(2);
+            Assertions.assertThat(
+                jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM events.events_images", Integer.class))
+                .isEqualTo(4);
+            Assertions.assertThat(
+                jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM events.events_categories", Integer.class))
+                .isZero();
+            Assertions.assertThat(
+                jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM events.images WHERE organizer_id = ?",
+                    Integer.class,
+                    "organizer-1"))
+                .isEqualTo(2);
     }
 
     @ParameterizedTest(name = "{index}: {0}")
@@ -682,46 +682,46 @@ class EventControllerTest extends BaseIntegrationTest {
     @Sql(scripts = "/scenario/cases/sql/clear-event-data.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD)
     void create_whenRequestIsRetried_thenCreateOnlyOneEventTest(
         String scenario, String requestBody, String idempotencyKey) throws Exception {
-        MockHttpServletRequestBuilder request = MockMvcRequestBuilders.post("/api/v1/events")
-            .with(
-                SecurityMockMvcRequestPostProcessors.jwt()
-                    .jwt(jwt -> jwt.subject("organizer-1"))
-                    .authorities(new SimpleGrantedAuthority("ROLE_ORGANIZER")))
-            .header("Idempotency-Key", idempotencyKey)
-            .contentType(MediaType.APPLICATION_JSON)
-            .content(requestBody);
-        MvcResult firstResult = mockMvc.perform(request).andReturn();
-        MvcResult retryResult = mockMvc.perform(request).andReturn();
+            MockHttpServletRequestBuilder request = MockMvcRequestBuilders.post("/api/v1/events")
+                .with(
+                    SecurityMockMvcRequestPostProcessors.jwt()
+                        .jwt(jwt -> jwt.subject("organizer-1"))
+                        .authorities(new SimpleGrantedAuthority("ROLE_ORGANIZER")))
+                .header("Idempotency-Key", idempotencyKey)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody);
+            MvcResult firstResult = mockMvc.perform(request).andReturn();
+            MvcResult retryResult = mockMvc.perform(request).andReturn();
 
-        Assertions.assertThat(firstResult.getResponse().getStatus()).isEqualTo(201);
-        Assertions.assertThat(retryResult.getResponse().getStatus()).isEqualTo(201);
-        CreateEventResponseDto firstResponse = objectMapper.readValue(
-            firstResult.getResponse().getContentAsString(),
-            CreateEventResponseDto.class);
-        CreateEventResponseDto retryResponse = objectMapper.readValue(
-            retryResult.getResponse().getContentAsString(),
-            CreateEventResponseDto.class);
-        Assertions.assertThat(retryResponse).isEqualTo(firstResponse);
-        Assertions.assertThat(firstResponse.categoryIds()).hasSize(1);
-        Assertions.assertThat(firstResponse.images())
-            .extracting(EventImageResponseDto::position)
-            .containsExactly(ImagePosition.COVER, ImagePosition.GALLERY);
-        Assertions.assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM events.events", Integer.class))
-            .isOne();
-        Assertions.assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM events.events_categories", Integer.class))
-            .isOne();
-        Assertions.assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM events.events_images", Integer.class))
-            .isEqualTo(2);
-        Assertions.assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM events.idempotency_keys", Integer.class))
-            .isOne();
+            Assertions.assertThat(firstResult.getResponse().getStatus()).isEqualTo(201);
+            Assertions.assertThat(retryResult.getResponse().getStatus()).isEqualTo(201);
+            CreateEventResponseDto firstResponse = objectMapper.readValue(
+                firstResult.getResponse().getContentAsString(),
+                CreateEventResponseDto.class);
+            CreateEventResponseDto retryResponse = objectMapper.readValue(
+                retryResult.getResponse().getContentAsString(),
+                CreateEventResponseDto.class);
+            Assertions.assertThat(retryResponse).isEqualTo(firstResponse);
+            Assertions.assertThat(firstResponse.categoryIds()).hasSize(1);
+            Assertions.assertThat(firstResponse.images())
+                .extracting(EventImageResponseDto::position)
+                .containsExactly(ImagePosition.COVER, ImagePosition.GALLERY);
+            Assertions.assertThat(
+                jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM events.events", Integer.class))
+                .isOne();
+            Assertions.assertThat(
+                jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM events.events_categories", Integer.class))
+                .isOne();
+            Assertions.assertThat(
+                jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM events.events_images", Integer.class))
+                .isEqualTo(2);
+            Assertions.assertThat(
+                jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM events.idempotency_keys", Integer.class))
+                .isOne();
     }
 
     @ParameterizedTest(name = "{index}: {0}")
@@ -739,80 +739,80 @@ class EventControllerTest extends BaseIntegrationTest {
         String expectedDescription,
         ErrorResponseDto expectedConflict)
         throws Exception {
-        MvcResult firstResult = mockMvc.perform(
-            MockMvcRequestBuilders.post("/api/v1/events")
-                .with(
-                    SecurityMockMvcRequestPostProcessors.jwt()
-                        .jwt(jwt -> jwt.subject("organizer-1"))
-                        .authorities(
-                            new SimpleGrantedAuthority(
-                                "ROLE_ORGANIZER")))
-                .header("Idempotency-Key", idempotencyKey)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(firstRequest))
-            .andReturn();
-        MvcResult conflictResult = mockMvc.perform(
-            MockMvcRequestBuilders.post("/api/v1/events")
-                .with(
-                    SecurityMockMvcRequestPostProcessors.jwt()
-                        .jwt(jwt -> jwt.subject("organizer-1"))
-                        .authorities(
-                            new SimpleGrantedAuthority(
-                                "ROLE_ORGANIZER")))
-                .header("Idempotency-Key", idempotencyKey)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(changedRequest))
-            .andReturn();
+            MvcResult firstResult = mockMvc.perform(
+                MockMvcRequestBuilders.post("/api/v1/events")
+                    .with(
+                        SecurityMockMvcRequestPostProcessors.jwt()
+                            .jwt(jwt -> jwt.subject("organizer-1"))
+                            .authorities(
+                                new SimpleGrantedAuthority(
+                                    "ROLE_ORGANIZER")))
+                    .header("Idempotency-Key", idempotencyKey)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(firstRequest))
+                .andReturn();
+            MvcResult conflictResult = mockMvc.perform(
+                MockMvcRequestBuilders.post("/api/v1/events")
+                    .with(
+                        SecurityMockMvcRequestPostProcessors.jwt()
+                            .jwt(jwt -> jwt.subject("organizer-1"))
+                            .authorities(
+                                new SimpleGrantedAuthority(
+                                    "ROLE_ORGANIZER")))
+                    .header("Idempotency-Key", idempotencyKey)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(changedRequest))
+                .andReturn();
 
-        Assertions.assertThat(firstResult.getResponse().getStatus())
-            .isEqualTo(expectedCreatedStatus);
-        CreateEventResponseDto firstResponse = objectMapper.readValue(
-            firstResult.getResponse().getContentAsString(),
-            CreateEventResponseDto.class);
-        Assertions.assertThat(conflictResult.getResponse().getStatus())
-            .isEqualTo(expectedConflict.status());
-        ErrorResponseDto error = objectMapper.readValue(
-            conflictResult.getResponse().getContentAsString(), ErrorResponseDto.class);
-        Assertions.assertThat(error).isEqualTo(expectedConflict);
-        Assertions.assertThat(firstResponse.id()).isNotNull();
-        Assertions.assertThat(firstResponse.organizerId()).isEqualTo("organizer-1");
-        Assertions.assertThat(firstResponse.title()).isEqualTo(expectedTitle);
-        Assertions.assertThat(firstResponse.description()).isEqualTo(expectedDescription);
-        Assertions.assertThat(firstResponse.categoryIds())
-            .containsExactly(UUID.fromString("00000000-0000-0000-0000-000000000011"));
-        Assertions.assertThat(firstResponse.images())
-            .extracting(EventImageResponseDto::position)
-            .containsExactly(ImagePosition.COVER);
-        Assertions.assertThat(firstResponse.images())
-            .extracting(EventImageResponseDto::imageId)
-            .containsExactly(UUID.fromString("00000000-0000-0000-0000-000000000012"));
-        Assertions.assertThat(firstResponse.ageRestriction()).isZero();
-        Assertions.assertThat(firstResponse.status()).isEqualTo(EventStatus.DRAFT);
-        Assertions.assertThat(firstResponse.createdAt())
-            .isNotNull()
-            .isEqualTo(firstResponse.updatedAt());
-        Assertions.assertThat(firstResponse.images())
-            .extracting(EventImageResponseDto::createdAt)
-            .containsOnly(firstResponse.createdAt());
-        Assertions.assertThat(firstResponse.publishedAt()).isNull();
-        Assertions.assertThat(firstResponse.cancelledAt()).isNull();
-        Assertions.assertThat(firstResponse.completedAt()).isNull();
-        Assertions.assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM events.events", Integer.class))
-            .isOne();
-        Assertions.assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM events.events_categories", Integer.class))
-            .isOne();
-        Assertions.assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM events.events_images", Integer.class))
-            .isOne();
-        Assertions.assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM events.idempotency_keys", Integer.class))
-            .isOne();
+            Assertions.assertThat(firstResult.getResponse().getStatus())
+                .isEqualTo(expectedCreatedStatus);
+            CreateEventResponseDto firstResponse = objectMapper.readValue(
+                firstResult.getResponse().getContentAsString(),
+                CreateEventResponseDto.class);
+            Assertions.assertThat(conflictResult.getResponse().getStatus())
+                .isEqualTo(expectedConflict.status());
+            ErrorResponseDto error = objectMapper.readValue(
+                conflictResult.getResponse().getContentAsString(), ErrorResponseDto.class);
+            Assertions.assertThat(error).isEqualTo(expectedConflict);
+            Assertions.assertThat(firstResponse.id()).isNotNull();
+            Assertions.assertThat(firstResponse.organizerId()).isEqualTo("organizer-1");
+            Assertions.assertThat(firstResponse.title()).isEqualTo(expectedTitle);
+            Assertions.assertThat(firstResponse.description()).isEqualTo(expectedDescription);
+            Assertions.assertThat(firstResponse.categoryIds())
+                .containsExactly(UUID.fromString("00000000-0000-0000-0000-000000000011"));
+            Assertions.assertThat(firstResponse.images())
+                .extracting(EventImageResponseDto::position)
+                .containsExactly(ImagePosition.COVER);
+            Assertions.assertThat(firstResponse.images())
+                .extracting(EventImageResponseDto::imageId)
+                .containsExactly(UUID.fromString("00000000-0000-0000-0000-000000000012"));
+            Assertions.assertThat(firstResponse.ageRestriction()).isZero();
+            Assertions.assertThat(firstResponse.status()).isEqualTo(EventStatus.DRAFT);
+            Assertions.assertThat(firstResponse.createdAt())
+                .isNotNull()
+                .isEqualTo(firstResponse.updatedAt());
+            Assertions.assertThat(firstResponse.images())
+                .extracting(EventImageResponseDto::createdAt)
+                .containsOnly(firstResponse.createdAt());
+            Assertions.assertThat(firstResponse.publishedAt()).isNull();
+            Assertions.assertThat(firstResponse.cancelledAt()).isNull();
+            Assertions.assertThat(firstResponse.completedAt()).isNull();
+            Assertions.assertThat(
+                jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM events.events", Integer.class))
+                .isOne();
+            Assertions.assertThat(
+                jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM events.events_categories", Integer.class))
+                .isOne();
+            Assertions.assertThat(
+                jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM events.events_images", Integer.class))
+                .isOne();
+            Assertions.assertThat(
+                jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM events.idempotency_keys", Integer.class))
+                .isOne();
     }
 
     @ParameterizedTest(name = "{index}: {0}")
@@ -826,37 +826,37 @@ class EventControllerTest extends BaseIntegrationTest {
         String idempotencyKey,
         List<UUID> expectedCategoryIds)
         throws Exception {
-        MvcResult result = mockMvc.perform(
-            MockMvcRequestBuilders.post("/api/v1/events")
-                .with(
-                    SecurityMockMvcRequestPostProcessors.jwt()
-                        .jwt(jwt -> jwt.subject("organizer-1"))
-                        .authorities(
-                            new SimpleGrantedAuthority(
-                                "ROLE_ORGANIZER")))
-                .header("Idempotency-Key", idempotencyKey)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestBody))
-            .andReturn();
+            MvcResult result = mockMvc.perform(
+                MockMvcRequestBuilders.post("/api/v1/events")
+                    .with(
+                        SecurityMockMvcRequestPostProcessors.jwt()
+                            .jwt(jwt -> jwt.subject("organizer-1"))
+                            .authorities(
+                                new SimpleGrantedAuthority(
+                                    "ROLE_ORGANIZER")))
+                    .header("Idempotency-Key", idempotencyKey)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestBody))
+                .andReturn();
 
-        CreateEventResponseDto response = objectMapper.readValue(
-            result.getResponse().getContentAsString(), CreateEventResponseDto.class);
+            CreateEventResponseDto response = objectMapper.readValue(
+                result.getResponse().getContentAsString(), CreateEventResponseDto.class);
 
-        Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(201);
-        Assertions.assertThat(response.categoryIds())
-            .containsExactlyInAnyOrderElementsOf(expectedCategoryIds);
-        Assertions.assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM events.events_categories", Integer.class))
-            .isEqualTo(expectedCategoryIds.size());
-        Assertions.assertThat(
-            jdbcTemplate.queryForList(
-                "SELECT category_id FROM events.events_categories ORDER BY category_id",
-                UUID.class))
-            .containsExactlyElementsOf(expectedCategoryIds);
-        Assertions.assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM events.events_images", Integer.class))
-            .isOne();
+            Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(201);
+            Assertions.assertThat(response.categoryIds())
+                .containsExactlyInAnyOrderElementsOf(expectedCategoryIds);
+            Assertions.assertThat(
+                jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM events.events_categories", Integer.class))
+                .isEqualTo(expectedCategoryIds.size());
+            Assertions.assertThat(
+                jdbcTemplate.queryForList(
+                    "SELECT category_id FROM events.events_categories ORDER BY category_id",
+                    UUID.class))
+                .containsExactlyElementsOf(expectedCategoryIds);
+            Assertions.assertThat(
+                jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM events.events_images", Integer.class))
+                .isOne();
     }
 }

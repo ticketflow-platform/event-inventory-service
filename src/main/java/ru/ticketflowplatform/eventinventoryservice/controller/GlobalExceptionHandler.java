@@ -38,157 +38,157 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     ErrorResponseDto validation(MethodArgumentNotValidException exception, Locale locale) {
-        return errorMapper.toResponse(
-            HttpStatus.BAD_REQUEST.value(),
-            messageSource.getMessage("api.error.bad_request.message", null, locale),
-            messageSource.getMessage("api.error.validation.detail", null, locale),
-            exception.getBindingResult().getFieldErrors().stream()
-                .map(errorMapper::toFieldError)
-                .toList());
+            return errorMapper.toResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                messageSource.getMessage("api.error.bad_request.message", null, locale),
+                messageSource.getMessage("api.error.validation.detail", null, locale),
+                exception.getBindingResult().getFieldErrors().stream()
+                    .map(errorMapper::toFieldError)
+                    .toList());
     }
 
     @ExceptionHandler(HandlerMethodValidationException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     ErrorResponseDto methodValidation(HandlerMethodValidationException exception, Locale locale) {
-        return errorMapper.toResponse(
-            HttpStatus.BAD_REQUEST.value(),
-            messageSource.getMessage("api.error.bad_request.message", null, locale),
-            messageSource.getMessage("api.error.validation.detail", null, locale),
-            prepareErrors(exception, locale));
+            return errorMapper.toResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                messageSource.getMessage("api.error.bad_request.message", null, locale),
+                messageSource.getMessage("api.error.validation.detail", null, locale),
+                prepareErrors(exception, locale));
     }
 
     @ExceptionHandler(MissingRequestHeaderException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     ErrorResponseDto missingHeader(MissingRequestHeaderException exception, Locale locale) {
-        return errorMapper.toResponse(
-            HttpStatus.BAD_REQUEST.value(),
-            messageSource.getMessage("api.error.bad_request.message", null, locale),
-            messageSource.getMessage(
-                "api.error.header_missing.detail",
-                new Object[] { exception.getHeaderName() },
-                locale),
-            List.of());
+            return errorMapper.toResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                messageSource.getMessage("api.error.bad_request.message", null, locale),
+                messageSource.getMessage(
+                    "api.error.header_missing.detail",
+                    new Object[] { exception.getHeaderName() },
+                    locale),
+                List.of());
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     ErrorResponseDto unreadableRequest(Locale locale) {
-        return errorMapper.toResponse(
-            HttpStatus.BAD_REQUEST.value(),
-            messageSource.getMessage("api.error.bad_request.message", null, locale),
-            messageSource.getMessage("api.error.body_malformed.detail", null, locale),
-            List.of());
+            return errorMapper.toResponse(
+                HttpStatus.BAD_REQUEST.value(),
+                messageSource.getMessage("api.error.bad_request.message", null, locale),
+                messageSource.getMessage("api.error.body_malformed.detail", null, locale),
+                List.of());
     }
 
     @ExceptionHandler(InvalidEventReferenceException.class)
     @ResponseStatus(HttpStatus.UNPROCESSABLE_CONTENT)
     ErrorResponseDto invalidReference(InvalidEventReferenceException exception, Locale locale) {
-        return errorMapper.toResponse(
-            exception.getStatus(),
-            messageSource.getMessage(
-                exception.getMessageCode(),
-                exception.getArguments(),
-                locale),
-            messageSource.getMessage(
-                exception.getDetailCode(),
-                exception.getArguments(),
-                locale),
-            exception.getErrors());
+            return errorMapper.toResponse(
+                exception.getStatus(),
+                messageSource.getMessage(
+                    exception.getMessageCode(),
+                    exception.getArguments(),
+                    locale),
+                messageSource.getMessage(
+                    exception.getDetailCode(),
+                    exception.getArguments(),
+                    locale),
+                exception.getErrors());
     }
 
     @ExceptionHandler(InvalidEventRequestException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     ErrorResponseDto invalidRequest(InvalidEventRequestException exception, Locale locale) {
-        return errorMapper.toResponse(
-            exception.getStatus(),
-            messageSource.getMessage(
-                exception.getMessageCode(),
-                exception.getArguments(),
-                locale),
-            messageSource.getMessage(
-                exception.getDetailCode(),
-                exception.getArguments(),
-                locale),
-            exception.getErrors());
+            return errorMapper.toResponse(
+                exception.getStatus(),
+                messageSource.getMessage(
+                    exception.getMessageCode(),
+                    exception.getArguments(),
+                    locale),
+                messageSource.getMessage(
+                    exception.getDetailCode(),
+                    exception.getArguments(),
+                    locale),
+                exception.getErrors());
     }
 
     @ExceptionHandler(IdempotencyConflictException.class)
     @ResponseStatus(HttpStatus.CONFLICT)
     ErrorResponseDto idempotencyConflict(IdempotencyConflictException exception, Locale locale) {
-        return errorMapper.toResponse(
-            exception.getStatus(),
-            messageSource.getMessage(
-                exception.getMessageCode(),
-                exception.getArguments(),
-                locale),
-            messageSource.getMessage(
-                exception.getDetailCode(),
-                exception.getArguments(),
-                locale),
-            exception.getErrors());
+            return errorMapper.toResponse(
+                exception.getStatus(),
+                messageSource.getMessage(
+                    exception.getMessageCode(),
+                    exception.getArguments(),
+                    locale),
+                messageSource.getMessage(
+                    exception.getDetailCode(),
+                    exception.getArguments(),
+                    locale),
+                exception.getErrors());
     }
 
     @ExceptionHandler(EventNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     ErrorResponseDto eventNotFound(EventNotFoundException exception, Locale locale) {
-        return errorMapper.toResponse(
-            exception.getStatus(),
-            messageSource.getMessage(
-                exception.getMessageCode(),
-                exception.getArguments(),
-                locale),
-            messageSource.getMessage(
-                exception.getDetailCode(),
-                exception.getArguments(),
-                locale),
-            exception.getErrors());
+            return errorMapper.toResponse(
+                exception.getStatus(),
+                messageSource.getMessage(
+                    exception.getMessageCode(),
+                    exception.getArguments(),
+                    locale),
+                messageSource.getMessage(
+                    exception.getDetailCode(),
+                    exception.getArguments(),
+                    locale),
+                exception.getErrors());
     }
 
     @ExceptionHandler(HashGenerationException.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     ErrorResponseDto hashGenerationFailure(HashGenerationException exception, Locale locale) {
-        return errorMapper.toResponse(
-            exception.getStatus(),
-            messageSource.getMessage(
-                exception.getMessageCode(),
-                exception.getArguments(),
-                locale),
-            messageSource.getMessage(
-                exception.getDetailCode(),
-                exception.getArguments(),
-                locale),
-            exception.getErrors());
+            return errorMapper.toResponse(
+                exception.getStatus(),
+                messageSource.getMessage(
+                    exception.getMessageCode(),
+                    exception.getArguments(),
+                    locale),
+                messageSource.getMessage(
+                    exception.getDetailCode(),
+                    exception.getArguments(),
+                    locale),
+                exception.getErrors());
     }
 
     private List<FieldErrorResponseDto> prepareErrors(
         HandlerMethodValidationException exception,
         Locale locale) {
-        return exception.getParameterValidationResults().stream()
-            .flatMap(toFieldError(locale))
-            .toList();
+            return exception.getParameterValidationResults().stream()
+                .flatMap(toFieldError(locale))
+                .toList();
     }
 
     private Function<? super ParameterValidationResult, ? extends Stream<? extends FieldErrorResponseDto>> toFieldError(
         Locale locale) {
-        return result -> result.getResolvableErrors().stream()
-            .map(
-                error -> new ErrorResponseDto.FieldErrorResponseDto(
-                    error instanceof FieldError fieldError
-                        ? fieldError.getField()
-                        : parameterName(result),
-                    messageSource.getMessage(error, locale)));
+            return result -> result.getResolvableErrors().stream()
+                .map(
+                    error -> new ErrorResponseDto.FieldErrorResponseDto(
+                        error instanceof FieldError fieldError
+                            ? fieldError.getField()
+                            : parameterName(result),
+                        messageSource.getMessage(error, locale)));
     }
 
     private String parameterName(ParameterValidationResult result) {
-        RequestHeader header = result.getMethodParameter().getParameterAnnotation(RequestHeader.class);
-        if (header != null && !header.name().isBlank()) {
-            return header.name();
-        }
-        RequestParam requestParam = result.getMethodParameter().getParameterAnnotation(RequestParam.class);
-        if (requestParam != null && !requestParam.name().isBlank()) {
-            return requestParam.name();
-        }
+            RequestHeader header = result.getMethodParameter().getParameterAnnotation(RequestHeader.class);
+            if (header != null && !header.name().isBlank()) {
+                return header.name();
+            }
+            RequestParam requestParam = result.getMethodParameter().getParameterAnnotation(RequestParam.class);
+            if (requestParam != null && !requestParam.name().isBlank()) {
+                return requestParam.name();
+            }
 
-        return Objects.toString(result.getMethodParameter().getParameterName(), "request");
+            return Objects.toString(result.getMethodParameter().getParameterName(), "request");
     }
 }

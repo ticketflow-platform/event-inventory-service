@@ -11,6 +11,6 @@ class AgeRestrictionTest {
     @MethodSource("scenario.cases.java.domain.model.entity.enums.AgeRestrictionTestCases#isSupport_whenValueIsChecked_thenReturnSupportStatusTestCases")
     @DisplayName("Проверяет поддержку возрастного ограничения по сценариям")
     void isSupport_whenValueIsChecked_thenReturnSupportStatusTest(Integer value, boolean expected) {
-        Assertions.assertThat(AgeRestriction.isSupport(value)).isEqualTo(expected);
+            Assertions.assertThat(AgeRestriction.isSupport(value)).isEqualTo(expected);
     }
 }

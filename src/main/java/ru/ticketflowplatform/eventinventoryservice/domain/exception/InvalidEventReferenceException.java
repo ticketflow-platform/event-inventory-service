@@ -7,11 +7,11 @@ public class InvalidEventReferenceException extends ErrorResponseException {
 
     public InvalidEventReferenceException(
         String messageCode, String detailCode, Object... arguments) {
-        super(
-            HttpStatus.UNPROCESSABLE_CONTENT.value(),
-            messageCode,
-            detailCode,
-            List.of(),
-            arguments);
+            super(
+                HttpStatus.UNPROCESSABLE_CONTENT.value(),
+                messageCode,
+                detailCode,
+                List.of(),
+                arguments);
     }
 }

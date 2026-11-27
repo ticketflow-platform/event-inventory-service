@@ -21,7 +21,7 @@ public interface EventCategoryMapper {
     EventCategory toEntity(Event event, Category category, Instant now);
 
     default UUID toCategoryId(EventCategory eventCategory) {
-        return eventCategory.getCategory().getId();
+            return eventCategory.getCategory().getId();
     }
 
     List<UUID> toCategoryIds(List<EventCategory> eventCategories);

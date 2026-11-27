@@ -11,14 +11,14 @@ class ApplicationConfig {
 
     @Bean
     ObjectMapper objectMapper() {
-        return new ObjectMapper();
+            return new ObjectMapper();
     }
 
     @Bean
     JsonMapper requestMapper() {
-        return JsonMapper.builder()
-            .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
-            .disable(MapperFeature.SORT_CREATOR_PROPERTIES_FIRST)
-            .build();
+            return JsonMapper.builder()
+                .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+                .disable(MapperFeature.SORT_CREATOR_PROPERTIES_FIRST)
+                .build();
     }
 }

@@ -26,6 +26,10 @@ val springdocVersion = providers.gradleProperty("springdocVersion").get()
 val mapstructVersion = providers.gradleProperty("mapstructVersion").get()
 val javaVersion = providers.gradleProperty("javaVersion").get()
 
+class MethodBodyIndentationFormatter : com.diffplug.spotless.FormatterFunc, java.io.Serializable {
+    override fun apply(input: String): String = buildlogic.format.MethodBodyIndentation.apply(input)
+}
+
 group = "ru.ticketflow-platform"
 version = "0.0.1-SNAPSHOT"
 description = "event-inventory-service"
@@ -42,7 +46,7 @@ repositories {
 
 spotless {
     java {
-        target("src/*/java/**/*.java")
+        target("src/*/java/**/*.java", "buildSrc/src/main/java/**/*.java")
         eclipse("4.41").configProperties("""
             org.eclipse.jdt.core.formatter.tabulation.char=space
             org.eclipse.jdt.core.formatter.tabulation.size=4
@@ -60,6 +64,7 @@ spotless {
             org.eclipse.jdt.core.formatter.insert_space_after_opening_brace_in_array_initializer=insert
             org.eclipse.jdt.core.formatter.insert_space_before_closing_brace_in_array_initializer=insert
         """.trimIndent())
+        custom("indent-method-bodies", MethodBodyIndentationFormatter())
     }
 }
 

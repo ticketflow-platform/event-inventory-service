@@ -40,3 +40,7 @@ out/
 /gradle
 gradlew
 gradlew.bat
+buildSrc
+.zed
+scripts
+opencode.jsonc

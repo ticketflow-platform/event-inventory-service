@@ -16,32 +16,32 @@ public class OpenApiLocaleConfig {
     OpenApiLocaleConfig(
         @Value("${api.urls.openapi}")
         String openApiPath) {
-        this.openApiPath = openApiPath;
+            this.openApiPath = openApiPath;
     }
 
     @Bean
     OpenApiCustomizer defaultRussianOpenApiCustomizer(OpenApiLocalizer localizer) {
-        return openApi -> localizer.localize(openApi, Locale.forLanguageTag(I18N.RUSSIAN_LANGUAGE_TAG));
+            return openApi -> localizer.localize(openApi, Locale.forLanguageTag(I18N.RUSSIAN_LANGUAGE_TAG));
     }
 
     @Bean
     GroupedOpenApi russianOpenApi(OpenApiLocalizer localizer) {
-        return localizedGroup(
-            I18N.RUSSIAN_LANGUAGE_TAG,
-            Locale.forLanguageTag(I18N.RUSSIAN_LANGUAGE_TAG),
-            localizer);
+            return localizedGroup(
+                I18N.RUSSIAN_LANGUAGE_TAG,
+                Locale.forLanguageTag(I18N.RUSSIAN_LANGUAGE_TAG),
+                localizer);
     }
 
     @Bean
     GroupedOpenApi englishOpenApi(OpenApiLocalizer localizer) {
-        return localizedGroup(I18N.ENGLISH_LANGUAGE_TAG, Locale.ENGLISH, localizer);
+            return localizedGroup(I18N.ENGLISH_LANGUAGE_TAG, Locale.ENGLISH, localizer);
     }
 
     private GroupedOpenApi localizedGroup(String name, Locale locale, OpenApiLocalizer localizer) {
-        return GroupedOpenApi.builder()
-            .group(name)
-            .pathsToMatch(openApiPath)
-            .addOpenApiCustomizer(openApi -> localizer.localize(openApi, locale))
-            .build();
+            return GroupedOpenApi.builder()
+                .group(name)
+                .pathsToMatch(openApiPath)
+                .addOpenApiCustomizer(openApi -> localizer.localize(openApi, locale))
+                .build();
     }
 }

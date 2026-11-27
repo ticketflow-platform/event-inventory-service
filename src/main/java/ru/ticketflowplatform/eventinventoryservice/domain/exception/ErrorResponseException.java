@@ -19,7 +19,7 @@ public class ErrorResponseException extends RuntimeException {
         String detailCode,
         List<FieldErrorResponseDto> errors,
         Object... arguments) {
-        this(status, messageCode, detailCode, null, errors, arguments);
+            this(status, messageCode, detailCode, null, errors, arguments);
     }
 
     protected ErrorResponseException(
@@ -29,11 +29,11 @@ public class ErrorResponseException extends RuntimeException {
         Throwable cause,
         List<FieldErrorResponseDto> errors,
         Object... arguments) {
-        super(detailCode, cause);
-        this.status = status;
-        this.messageCode = messageCode;
-        this.detailCode = detailCode;
-        this.arguments = arguments.clone();
-        this.errors = errors;
+            super(detailCode, cause);
+            this.status = status;
+            this.messageCode = messageCode;
+            this.detailCode = detailCode;
+            this.arguments = arguments.clone();
+            this.errors = errors;
     }
 }

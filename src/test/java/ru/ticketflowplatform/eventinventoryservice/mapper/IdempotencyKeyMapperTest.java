@@ -25,20 +25,20 @@ class IdempotencyKeyMapperTest {
         String requestHash,
         Event event,
         Instant now) {
-        IdempotencyKey idempotencyKey = idempotencyKeyMapper.toEntity(organizerId, key, requestHash, event, now);
+            IdempotencyKey idempotencyKey = idempotencyKeyMapper.toEntity(organizerId, key, requestHash, event, now);
 
-        Assertions.assertThat(idempotencyKey.getId()).isNull();
-        Assertions.assertThat(idempotencyKey.getOrganizerId()).isEqualTo(organizerId);
-        Assertions.assertThat(idempotencyKey.getKey()).isEqualTo(key);
-        Assertions.assertThat(idempotencyKey.getRequestHash()).isEqualTo(requestHash);
-        Assertions.assertThat(idempotencyKey.getEvent()).isSameAs(event);
-        Assertions.assertThat(idempotencyKey.getCreatedAt()).isEqualTo(now);
+            Assertions.assertThat(idempotencyKey.getId()).isNull();
+            Assertions.assertThat(idempotencyKey.getOrganizerId()).isEqualTo(organizerId);
+            Assertions.assertThat(idempotencyKey.getKey()).isEqualTo(key);
+            Assertions.assertThat(idempotencyKey.getRequestHash()).isEqualTo(requestHash);
+            Assertions.assertThat(idempotencyKey.getEvent()).isSameAs(event);
+            Assertions.assertThat(idempotencyKey.getCreatedAt()).isEqualTo(now);
     }
 
     @ParameterizedTest(name = "{index}: {0}")
     @MethodSource("scenario.cases.java.mapper.IdempotencyKeyMapperTestCases#toEntity_whenAllInputsAreNull_thenReturnNullTestCases")
     @DisplayName("Возвращает null, если данные идемпотентности не заданы")
     void toEntity_whenAllInputsAreNull_thenReturnNullTest(String scenario) {
-        Assertions.assertThat(idempotencyKeyMapper.toEntity(null, null, null, null, null)).isNull();
+            Assertions.assertThat(idempotencyKeyMapper.toEntity(null, null, null, null, null)).isNull();
     }
 }

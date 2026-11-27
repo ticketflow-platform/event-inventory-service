@@ -7,6 +7,6 @@ public class IdempotencyConflictException extends ErrorResponseException {
 
     public IdempotencyConflictException(
         String messageCode, String detailCode, Object... arguments) {
-        super(HttpStatus.CONFLICT.value(), messageCode, detailCode, List.of(), arguments);
+            super(HttpStatus.CONFLICT.value(), messageCode, detailCode, List.of(), arguments);
     }
 }

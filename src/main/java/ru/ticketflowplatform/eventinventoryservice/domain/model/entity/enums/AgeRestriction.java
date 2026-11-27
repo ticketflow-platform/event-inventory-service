@@ -10,11 +10,11 @@ public enum AgeRestriction {
     private final int value;
 
     AgeRestriction(int value) {
-        this.value = value;
+            this.value = value;
     }
 
     public static boolean isSupport(Integer value) {
-        return value != null
-            && Arrays.stream(values()).anyMatch(restriction -> restriction.value == value);
+            return value != null
+                && Arrays.stream(values()).anyMatch(restriction -> restriction.value == value);
     }
 }

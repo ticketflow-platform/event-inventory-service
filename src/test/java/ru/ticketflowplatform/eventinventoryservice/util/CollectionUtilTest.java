@@ -16,8 +16,8 @@ class CollectionUtilTest {
     <R> void collectOrEmpty_whenCollectorIsProvided_thenCollectResultTest(
         String scenario, Collection<String> source, Collector<String, ?, R> collector,
         R expected, Class<?> expectedType) {
-        R actual = CollectionUtil.collectOrEmpty(source, collector);
-        Assertions.assertThat(actual).isInstanceOf(expectedType).isEqualTo(expected);
+            R actual = CollectionUtil.collectOrEmpty(source, collector);
+            Assertions.assertThat(actual).isInstanceOf(expectedType).isEqualTo(expected);
     }
 
     @ParameterizedTest(name = "{index}: {0}")
@@ -25,9 +25,9 @@ class CollectionUtilTest {
     @DisplayName("Не скрывает ошибку Collector при повторяющихся ключах")
     <R> void collectOrEmpty_whenMapKeysAreDuplicated_thenPropagateCollectorErrorTest(
         String scenario, Collection<String> source, Collector<String, ?, R> collector, String expectedMessage) {
-        Assertions.assertThatThrownBy(() -> CollectionUtil.collectOrEmpty(source, collector))
-            .isInstanceOf(IllegalStateException.class)
-            .hasMessage(expectedMessage);
+            Assertions.assertThatThrownBy(() -> CollectionUtil.collectOrEmpty(source, collector))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage(expectedMessage);
     }
 
     @ParameterizedTest(name = "{index}: {0}")
@@ -36,7 +36,7 @@ class CollectionUtilTest {
     <R> void filterDistinctOrEmpty_whenRuleIsProvided_thenFilterAndCollectTest(
         String scenario, Collection<String> source, Predicate<String> rule, Collector<String, ?, R> collector,
         R expected, Class<?> expectedType) {
-        R actual = CollectionUtil.filterDistinctOrEmpty(source, rule, collector);
-        Assertions.assertThat(actual).isInstanceOf(expectedType).isEqualTo(expected);
+            R actual = CollectionUtil.filterDistinctOrEmpty(source, rule, collector);
+            Assertions.assertThat(actual).isInstanceOf(expectedType).isEqualTo(expected);
     }
 }

@@ -34,18 +34,18 @@ public class SecurityExceptionHandler implements AuthenticationEntryPoint, Acces
         HttpServletResponse response,
         AuthenticationException exception)
         throws IOException {
-        new BearerTokenAuthenticationEntryPoint().commence(request, response, exception);
-        boolean invalidAudience = hasInvalidAudience(exception);
-        writeError(
-            request,
-            response,
-            HttpStatus.UNAUTHORIZED,
-            invalidAudience
-                ? "api.error.invalid_audience.message"
-                : "api.error.unauthorized.message",
-            invalidAudience
-                ? "api.error.invalid_audience.detail"
-                : "api.error.unauthorized.detail");
+            new BearerTokenAuthenticationEntryPoint().commence(request, response, exception);
+            boolean invalidAudience = hasInvalidAudience(exception);
+            writeError(
+                request,
+                response,
+                HttpStatus.UNAUTHORIZED,
+                invalidAudience
+                    ? "api.error.invalid_audience.message"
+                    : "api.error.unauthorized.message",
+                invalidAudience
+                    ? "api.error.invalid_audience.detail"
+                    : "api.error.unauthorized.detail");
     }
 
     @Override
@@ -54,13 +54,13 @@ public class SecurityExceptionHandler implements AuthenticationEntryPoint, Acces
         HttpServletResponse response,
         AccessDeniedException exception)
         throws IOException {
-        new BearerTokenAccessDeniedHandler().handle(request, response, exception);
-        writeError(
-            request,
-            response,
-            HttpStatus.FORBIDDEN,
-            "api.error.forbidden.message",
-            "api.error.forbidden.detail");
+            new BearerTokenAccessDeniedHandler().handle(request, response, exception);
+            writeError(
+                request,
+                response,
+                HttpStatus.FORBIDDEN,
+                "api.error.forbidden.message",
+                "api.error.forbidden.detail");
     }
 
     private void writeError(
@@ -70,32 +70,32 @@ public class SecurityExceptionHandler implements AuthenticationEntryPoint, Acces
         String messageCode,
         String detailCode)
         throws IOException {
-        response.setStatus(status.value());
-        response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        objectMapper.writeValue(
-            response.getOutputStream(),
-            new ErrorResponseDto(
-                status.value(),
-                messageSource.getMessage(messageCode, null, request.getLocale()),
-                messageSource.getMessage(detailCode, null, request.getLocale()),
-                List.of()));
+            response.setStatus(status.value());
+            response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+            objectMapper.writeValue(
+                response.getOutputStream(),
+                new ErrorResponseDto(
+                    status.value(),
+                    messageSource.getMessage(messageCode, null, request.getLocale()),
+                    messageSource.getMessage(detailCode, null, request.getLocale()),
+                    List.of()));
     }
 
     private boolean hasInvalidAudience(Throwable exception) {
-        String invalidAudienceDescription = messageSource.getMessage(
-            "security.jwt.invalid_audience.error_description",
-            null,
-            Locale.ENGLISH);
+            String invalidAudienceDescription = messageSource.getMessage(
+                "security.jwt.invalid_audience.error_description",
+                null,
+                Locale.ENGLISH);
 
-        for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
-            if (cause instanceof JwtValidationException validationException
-                && validationException.getErrors().stream()
-                    .anyMatch(error -> invalidAudienceDescription.equals(error.getDescription()))) {
-                return true;
+            for (Throwable cause = exception; cause != null; cause = cause.getCause()) {
+                if (cause instanceof JwtValidationException validationException
+                    && validationException.getErrors().stream()
+                        .anyMatch(error -> invalidAudienceDescription.equals(error.getDescription()))) {
+                    return true;
+                }
             }
-        }
 
-        return false;
+            return false;
     }
 }

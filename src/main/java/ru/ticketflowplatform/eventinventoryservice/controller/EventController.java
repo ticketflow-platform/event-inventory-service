@@ -80,6 +80,6 @@ public class EventController {
         @RequestBody
         @Valid
         CreateEventRequestDto request) {
-        return eventService.create(request, jwt.getSubject(), idempotencyKey);
+            return eventService.create(request, jwt.getSubject(), idempotencyKey);
     }
 }

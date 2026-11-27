@@ -31,14 +31,14 @@ class SecurityConfigApiTest extends BaseIntegrationTest {
 
     @DynamicPropertySource
     static void jwkSetUri(DynamicPropertyRegistry properties) {
-        properties.add(
-            "security.jwt.jwk-set-uri",
-            () -> "http://127.0.0.1:" + JWKS_SERVER.getAddress().getPort() + "/jwks");
+            properties.add(
+                "security.jwt.jwk-set-uri",
+                () -> "http://127.0.0.1:" + JWKS_SERVER.getAddress().getPort() + "/jwks");
     }
 
     @AfterAll
     static void stopJwksServer() {
-        JWKS_SERVER.stop(0);
+            JWKS_SERVER.stop(0);
     }
 
     @ParameterizedTest(name = "{index}: {0}")
@@ -52,37 +52,37 @@ class SecurityConfigApiTest extends BaseIntegrationTest {
         String expectedOrganizerId,
         String expectedTitle)
         throws Exception {
-        MvcResult result = mockMvc.perform(
-            MockMvcRequestBuilders.post("/api/v1/events")
-                .header("Authorization", "Bearer " + token)
-                .header("Idempotency-Key", idempotencyKey)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestBody))
-            .andReturn();
-        CreateEventResponseDto response = objectMapper.readValue(
-            result.getResponse().getContentAsString(), CreateEventResponseDto.class);
+            MvcResult result = mockMvc.perform(
+                MockMvcRequestBuilders.post("/api/v1/events")
+                    .header("Authorization", "Bearer " + token)
+                    .header("Idempotency-Key", idempotencyKey)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestBody))
+                .andReturn();
+            CreateEventResponseDto response = objectMapper.readValue(
+                result.getResponse().getContentAsString(), CreateEventResponseDto.class);
 
-        Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(201);
-        Assertions.assertThat(response.id()).isNotNull();
-        Assertions.assertThat(response.organizerId()).isEqualTo(expectedOrganizerId);
-        Assertions.assertThat(response.title()).isEqualTo(expectedTitle);
-        Assertions.assertThat(response.description()).isNull();
-        Assertions.assertThat(response.categoryIds()).isEmpty();
-        Assertions.assertThat(response.images()).isEmpty();
-        Assertions.assertThat(response.ageRestriction()).isNull();
-        Assertions.assertThat(response.status()).isEqualTo(EventStatus.DRAFT);
-        Assertions.assertThat(response.createdAt()).isNotNull().isEqualTo(response.updatedAt());
-        Assertions.assertThat(response.publishedAt()).isNull();
-        Assertions.assertThat(response.cancelledAt()).isNull();
-        Assertions.assertThat(response.completedAt()).isNull();
-        Assertions.assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM events.events", Integer.class))
-            .isOne();
-        Assertions.assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM events.idempotency_keys", Integer.class))
-            .isOne();
+            Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(201);
+            Assertions.assertThat(response.id()).isNotNull();
+            Assertions.assertThat(response.organizerId()).isEqualTo(expectedOrganizerId);
+            Assertions.assertThat(response.title()).isEqualTo(expectedTitle);
+            Assertions.assertThat(response.description()).isNull();
+            Assertions.assertThat(response.categoryIds()).isEmpty();
+            Assertions.assertThat(response.images()).isEmpty();
+            Assertions.assertThat(response.ageRestriction()).isNull();
+            Assertions.assertThat(response.status()).isEqualTo(EventStatus.DRAFT);
+            Assertions.assertThat(response.createdAt()).isNotNull().isEqualTo(response.updatedAt());
+            Assertions.assertThat(response.publishedAt()).isNull();
+            Assertions.assertThat(response.cancelledAt()).isNull();
+            Assertions.assertThat(response.completedAt()).isNull();
+            Assertions.assertThat(
+                jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM events.events", Integer.class))
+                .isOne();
+            Assertions.assertThat(
+                jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM events.idempotency_keys", Integer.class))
+                .isOne();
     }
 
     @ParameterizedTest(name = "{index}: {0}")
@@ -95,26 +95,26 @@ class SecurityConfigApiTest extends BaseIntegrationTest {
         String idempotencyKey,
         ErrorResponseDto expectedError)
         throws Exception {
-        MvcResult result = mockMvc.perform(
-            MockMvcRequestBuilders.post("/api/v1/events")
-                .header("Authorization", "Bearer " + token)
-                .header("Idempotency-Key", idempotencyKey)
-                .header("Accept-Language", "en")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(requestBody))
-            .andReturn();
-        ErrorResponseDto error = objectMapper.readValue(
-            result.getResponse().getContentAsString(), ErrorResponseDto.class);
+            MvcResult result = mockMvc.perform(
+                MockMvcRequestBuilders.post("/api/v1/events")
+                    .header("Authorization", "Bearer " + token)
+                    .header("Idempotency-Key", idempotencyKey)
+                    .header("Accept-Language", "en")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(requestBody))
+                .andReturn();
+            ErrorResponseDto error = objectMapper.readValue(
+                result.getResponse().getContentAsString(), ErrorResponseDto.class);
 
-        Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(expectedError.status());
-        Assertions.assertThat(error).isEqualTo(expectedError);
-        Assertions.assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM events.events", Integer.class))
-            .isZero();
-        Assertions.assertThat(
-            jdbcTemplate.queryForObject(
-                "SELECT COUNT(*) FROM events.idempotency_keys", Integer.class))
-            .isZero();
+            Assertions.assertThat(result.getResponse().getStatus()).isEqualTo(expectedError.status());
+            Assertions.assertThat(error).isEqualTo(expectedError);
+            Assertions.assertThat(
+                jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM events.events", Integer.class))
+                .isZero();
+            Assertions.assertThat(
+                jdbcTemplate.queryForObject(
+                    "SELECT COUNT(*) FROM events.idempotency_keys", Integer.class))
+                .isZero();
     }
 }

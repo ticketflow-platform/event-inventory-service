@@ -21,45 +21,45 @@ class OpenApiLocalizerTest {
     @DisplayName("Локализует OpenAPI по указанной локали")
     void localize_whenLocaleIsRequested_thenTranslateOperationTagsAndSchemaPropertiesTest(
         String scenario, Locale locale, OpenAPI openApi, ExpectedOpenApi expected) {
-        localizer.localize(openApi, locale);
+            localizer.localize(openApi, locale);
 
-        Assertions.assertThat(openApi.getInfo().getTitle()).isEqualTo(expected.infoTitle());
-        Assertions.assertThat(openApi.getInfo().getDescription())
-            .isEqualTo(expected.infoDescription());
-        Assertions.assertThat(openApi.getPaths().get("/api/v1/events").getPost().getSummary())
-            .isEqualTo(expected.operationSummary());
-        Assertions.assertThat(openApi.getPaths().get("/api/v1/events").getPost().getDescription())
-            .isEqualTo(expected.operationDescription());
-        Assertions.assertThat(openApi.getTags().getFirst().getName()).isEqualTo(expected.tagName());
-        Assertions.assertThat(openApi.getTags().getFirst().getDescription())
-            .isEqualTo(expected.tagDescription());
-        Assertions.assertThat(
-            openApi.getPaths().get("/api/v1/events").getPost().getTags().getFirst())
-            .isEqualTo(expected.tagName());
-        Assertions.assertThat(
-            openApi.getPaths()
-                .get("/api/v1/events")
-                .getPost()
-                .getResponses()
-                .get("201")
-                .getDescription())
-            .isEqualTo(expected.responseDescription());
-        Assertions.assertThat(
-            ((Schema<?>) openApi.getComponents()
-                .getSchemas()
-                .get("Request")
-                .getProperties()
-                .get("title"))
-                .getDescription())
-            .isEqualTo(expected.schemaDescription());
-        Assertions.assertThat(
-            ((Schema<?>) openApi.getComponents()
-                .getSchemas()
-                .get("Request")
-                .getProperties()
-                .get("title"))
-                .getExample())
-            .isEqualTo(expected.schemaExample());
+            Assertions.assertThat(openApi.getInfo().getTitle()).isEqualTo(expected.infoTitle());
+            Assertions.assertThat(openApi.getInfo().getDescription())
+                .isEqualTo(expected.infoDescription());
+            Assertions.assertThat(openApi.getPaths().get("/api/v1/events").getPost().getSummary())
+                .isEqualTo(expected.operationSummary());
+            Assertions.assertThat(openApi.getPaths().get("/api/v1/events").getPost().getDescription())
+                .isEqualTo(expected.operationDescription());
+            Assertions.assertThat(openApi.getTags().getFirst().getName()).isEqualTo(expected.tagName());
+            Assertions.assertThat(openApi.getTags().getFirst().getDescription())
+                .isEqualTo(expected.tagDescription());
+            Assertions.assertThat(
+                openApi.getPaths().get("/api/v1/events").getPost().getTags().getFirst())
+                .isEqualTo(expected.tagName());
+            Assertions.assertThat(
+                openApi.getPaths()
+                    .get("/api/v1/events")
+                    .getPost()
+                    .getResponses()
+                    .get("201")
+                    .getDescription())
+                .isEqualTo(expected.responseDescription());
+            Assertions.assertThat(
+                ((Schema<?>) openApi.getComponents()
+                    .getSchemas()
+                    .get("Request")
+                    .getProperties()
+                    .get("title"))
+                    .getDescription())
+                .isEqualTo(expected.schemaDescription());
+            Assertions.assertThat(
+                ((Schema<?>) openApi.getComponents()
+                    .getSchemas()
+                    .get("Request")
+                    .getProperties()
+                    .get("title"))
+                    .getExample())
+                .isEqualTo(expected.schemaExample());
     }
 
     @ParameterizedTest(name = "{index}: {0}")
@@ -67,8 +67,8 @@ class OpenApiLocalizerTest {
     @DisplayName("Обрабатывает OpenAPI без необязательных разделов по сценариям")
     void localize_whenOptionalSectionsAreMissing_thenStillSetInfoTest(
         String scenario, OpenAPI openApi, String expectedTitle) {
-        localizer.localize(openApi, Locale.ENGLISH);
+            localizer.localize(openApi, Locale.ENGLISH);
 
-        Assertions.assertThat(openApi.getInfo().getTitle()).isEqualTo(expectedTitle);
+            Assertions.assertThat(openApi.getInfo().getTitle()).isEqualTo(expectedTitle);
     }
 }

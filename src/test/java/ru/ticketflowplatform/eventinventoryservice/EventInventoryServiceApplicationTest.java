@@ -14,11 +14,11 @@ class EventInventoryServiceApplicationTest {
     @DisplayName("Передаёт аргументы в запуск Spring Boot")
     void main_whenArgumentsAreProvided_thenLaunchSpringApplicationTest(
         String scenario, String[] args) {
-        try (MockedStatic<SpringApplication> springApplication = Mockito.mockStatic(SpringApplication.class)) {
-            EventInventoryServiceApplication.main(args);
+            try (MockedStatic<SpringApplication> springApplication = Mockito.mockStatic(SpringApplication.class)) {
+                EventInventoryServiceApplication.main(args);
 
-            springApplication.verify(
-                () -> SpringApplication.run(EventInventoryServiceApplication.class, args));
-        }
+                springApplication.verify(
+                    () -> SpringApplication.run(EventInventoryServiceApplication.class, args));
+            }
     }
 }

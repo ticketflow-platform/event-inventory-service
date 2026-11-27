@@ -19,12 +19,12 @@ public class HashService {
     private final JsonMapper requestMapper;
 
     public String hash(CreateEventRequestDto request) {
-        try {
-            byte[] canonical = requestMapper.writeValueAsBytes(request);
-            byte[] digest = MessageDigest.getInstance(SHA_256_ALGORITHM).digest(canonical);
-            return HexFormat.of().formatHex(digest);
-        } catch (NoSuchAlgorithmException exception) {
-            throw new HashGenerationException(exception);
-        }
+            try {
+                byte[] canonical = requestMapper.writeValueAsBytes(request);
+                byte[] digest = MessageDigest.getInstance(SHA_256_ALGORITHM).digest(canonical);
+                return HexFormat.of().formatHex(digest);
+            } catch (NoSuchAlgorithmException exception) {
+                throw new HashGenerationException(exception);
+            }
     }
 }
